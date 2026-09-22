@@ -1,0 +1,59 @@
+# .NET local
+.dotnet/
+backend/.dotnet-home/
+.dotnet-home/
+**/bin/
+**/obj/
+
+# Base de datos
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Keys / datos locales
+backend/.keys/
+.appdata/
+backend/.appdata/
+.packages/
+
+# Storage y documentos privados
+storage/
+storage/operations/
+test-data/private/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Configuración local / secretos
+backend/appsettings.Local.json
+backend/appsettings.Production.local.json
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Archivos de usuario
+*.user
+*.suo
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Mantener placeholders
+!.gitkeep
+
+.gitignore "`n# Build artifacts"
+.gitignore "**/.artifacts/"
+.gitignore "*.tsbuildinfo"
+**/.artifacts/
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
