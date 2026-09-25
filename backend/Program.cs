@@ -2,6 +2,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sace.Api.Contracts;
@@ -10,21 +12,64 @@ using Sace.Api.Infrastructure;
 using Sace.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Logging.ClearProviders(); builder.Logging.AddConsole(); builder.Logging.AddDebug();
+builder.Logging.ClearProviders(); builder.Logging.AddConsole();
+if (builder.Environment.IsDevelopment()) builder.Logging.AddDebug();
+
+var configuredPort = builder.Configuration["PORT"];
+if (!string.IsNullOrWhiteSpace(configuredPort))
+{
+    if (!int.TryParse(configuredPort, out var port) || port is < 1 or > 65535)
+        throw new InvalidOperationException("PORT debe ser un número entre 1 y 65535.");
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
+static string ResolvePath(string configuredPath, string contentRoot)
+    => Path.GetFullPath(Path.IsPathRooted(configuredPath) ? configuredPath : Path.Combine(contentRoot, configuredPath));
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException("Falta ConnectionStrings:DefaultConnection.");
+var sqlite = new SqliteConnectionStringBuilder(connectionString);
+if (!string.IsNullOrWhiteSpace(sqlite.DataSource) && sqlite.DataSource != ":memory:")
+{
+    var databasePath = ResolvePath(sqlite.DataSource, builder.Environment.ContentRootPath);
+    Directory.CreateDirectory(Path.GetDirectoryName(databasePath)
+        ?? throw new InvalidOperationException("No se pudo resolver el directorio de SQLite."));
+}
+
+var storageRoot = ResolvePath(builder.Configuration["Storage:RootPath"]
+    ?? builder.Configuration["FileStorage:RootPath"] ?? "../storage", builder.Environment.ContentRootPath);
+Directory.CreateDirectory(storageRoot);
+var dataProtectionKeysPath = ResolvePath(builder.Configuration["DataProtection:KeysPath"] ?? ".keys", builder.Environment.ContentRootPath);
+Directory.CreateDirectory(dataProtectionKeysPath);
+
 builder.Services.ConfigureHttpJsonOptions(o => { o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()); o.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; });
-builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, ".keys")));
-builder.Services.AddDbContext<SaceDbContext>(o => o.UseSqlite(builder.Configuration.GetConnectionString("Default"), sqlite => sqlite.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+builder.Services.AddDbContext<SaceDbContext>(o => o.UseSqlite(connectionString, sqliteOptions => sqliteOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 builder.Services.AddHostedService<DailyAuditWorker>();
 builder.Services.AddScoped<IPasswordService, PasswordService>(); builder.Services.AddScoped<ITokenService, TokenService>(); builder.Services.AddScoped<IAuditEngine, AuditEngine>(); builder.Services.AddScoped<ILegalAuditEngine, LegalAuditEngine>(); builder.Services.AddScoped<IMonthlyAuditRule, DemoMonthlyConsolidationRule>(); builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>(); builder.Services.AddScoped<IDocumentValidationService, DocumentValidationService>(); builder.Services.AddScoped<IDocumentClassifier, DocumentClassifier>(); builder.Services.AddScoped<IDocumentProcessingService, DocumentProcessingService>(); builder.Services.AddScoped<PedimentoXmlParser>(); builder.Services.AddScoped<IXmlDocumentProcessor>(x => x.GetRequiredService<PedimentoXmlParser>()); builder.Services.AddScoped<IPedimentoParser>(x => x.GetRequiredService<PedimentoXmlParser>()); builder.Services.AddScoped<IPdfDocumentProcessor, PdfDocumentProcessor>(); builder.Services.AddScoped<IExcelDocumentProcessor, ExcelDocumentProcessor>();
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT key missing");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+    throw new InvalidOperationException("Jwt:Key es obligatorio y debe tener al menos 32 caracteres.");
+if (builder.Environment.IsProduction() && (jwtKey.Contains("DEVELOPMENT", StringComparison.OrdinalIgnoreCase) || jwtKey.Contains("CHANGE_ME", StringComparison.OrdinalIgnoreCase) || jwtKey.Contains("CHANGE_THIS", StringComparison.OrdinalIgnoreCase)))
+    throw new InvalidOperationException("Jwt:Key no puede usar una clave de demostración en Production.");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o => { o.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = true, ValidIssuer = builder.Configuration["Jwt:Issuer"], ValidateAudience = true, ValidAudience = builder.Configuration["Jwt:Audience"], ValidateLifetime = true, ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)), ClockSkew = TimeSpan.FromMinutes(1) }; });
-builder.Services.AddAuthorization(); builder.Services.AddCors(o => o.AddPolicy("dev", p => p.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:5173"]).AllowAnyHeader().AllowAnyMethod()));
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
+    ?? (builder.Environment.IsDevelopment() ? ["http://localhost:5173", "http://127.0.0.1:5173"] : []);
+if (allowedOrigins.Length == 0) throw new InvalidOperationException("Configure al menos un origen en Cors:AllowedOrigins.");
+builder.Services.AddAuthorization(); builder.Services.AddCors(o => o.AddPolicy("configured-origins", p => p.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
+var maxUploadMb = builder.Configuration.GetValue<long?>("Uploads:MaxFileSizeMb") ?? builder.Configuration.GetValue<long?>("FileStorage:MaxFileSizeMb") ?? 25;
+if (maxUploadMb <= 0) throw new InvalidOperationException("Uploads:MaxFileSizeMb debe ser mayor que cero.");
+builder.Services.Configure<FormOptions>(o => o.MultipartBodyLengthLimit = checked(maxUploadMb * 1024L * 1024L));
 builder.Services.AddEndpointsApiExplorer(); builder.Services.AddSwaggerGen();
 
-var app = builder.Build(); app.UseCors("dev"); app.UseSwagger(); app.UseSwaggerUI();
+var app = builder.Build(); app.UseCors("configured-origins");
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger:Enabled")) { app.UseSwagger(); app.UseSwaggerUI(); }
 app.Use(async (ctx, next) => { try { await next(); } catch (KeyNotFoundException ex) { await Error(ctx, 404, "NOT_FOUND", ex.Message); } catch (InvalidOperationException ex) { await Error(ctx, 400, "VALIDATION_ERROR", ex.Message); } catch (Exception ex) { app.Logger.LogError(ex, "Unhandled API error"); await Error(ctx, 500, "INTERNAL_ERROR", "Ocurrió un error inesperado."); } });
 app.UseAuthentication(); app.UseAuthorization();
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok", utc = DateTime.UtcNow })).AllowAnonymous();
+app.MapGet("/health", (ILogger<Program> logger) => { logger.LogInformation("Health check completed successfully."); return Results.Ok(new { status = "healthy" }); }).AllowAnonymous();
+app.MapGet("/api/health", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
 
 var auth = app.MapGroup("/api/auth");
 auth.MapPost("/login", async (LoginRequest request, SaceDbContext db, IPasswordService passwords, ITokenService tokens) => { var email = request.Email.Trim().ToLowerInvariant(); var user = await db.Users.SingleOrDefaultAsync(x => x.Email == email); if (user is null || !user.IsActive || !passwords.Verify(request.Password, user.PasswordHash)) return Results.Json(new ApiError(401, "INVALID_CREDENTIALS", "Correo o contraseña incorrectos.", new { }), statusCode: 401); db.SystemAuditLogs.Add(new SystemAuditLog { UserId = user.Id, Action = "LOGIN", EntityType = "User", EntityId = user.Id.ToString(), Details = "Inicio de sesión exitoso." }); await db.SaveChangesAsync(); return Results.Ok(new { token = tokens.Create(user), user = new { user.Id, user.Name, user.Email, user.Role } }); }).AllowAnonymous();
@@ -67,6 +112,12 @@ api.MapGet("/document-types", async (SaceDbContext db) => Results.Ok(await db.Do
 api.MapPatch("/document-types/{id:guid}", async (Guid id, DocumentType request, HttpContext ctx, SaceDbContext db) => { var item = await db.DocumentTypes.FindAsync(id); if (item is null) return Results.NotFound(); item.Name=request.Name; item.Description=request.Description; item.CorrectionResponsible=request.CorrectionResponsible; item.IsActive=request.IsActive; db.SystemAuditLogs.Add(Log(ctx.User.UserId(), "DOCUMENT_TYPE_UPDATED", "DocumentType", id, $"Catálogo {item.Code} actualizado.")); await db.SaveChangesAsync(); return Results.Ok(item); });
 api.MapGet("/audit-log", async (string? action, DateTime? from, DateTime? to, SaceDbContext db) => { var q = db.SystemAuditLogs.AsNoTracking().Include(x => x.User).AsQueryable(); if (!string.IsNullOrWhiteSpace(action)) q = q.Where(x => x.Action.Contains(action)); if (from.HasValue) q = q.Where(x => x.Timestamp >= from); if (to.HasValue) q = q.Where(x => x.Timestamp <= to); return Results.Ok(await q.OrderByDescending(x => x.Timestamp).Take(250).Select(x => new { x.Id, x.Timestamp, user = x.User != null ? x.User.Name : "Sistema", x.Action, x.EntityType, x.EntityId, x.Details }).ToListAsync()); });
 
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var database = scope.ServiceProvider.GetRequiredService<SaceDbContext>();
+    await database.Database.MigrateAsync();
+    app.Logger.LogInformation("Database migrations applied successfully.");
+}
 await DbSeeder.SeedAsync(app.Services); app.Run();
 
 static SystemAuditLog Log(Guid user, string action, string entity, Guid id, string details) => new() { UserId = user == Guid.Empty ? null : user, Action = action, EntityType = entity, EntityId = id.ToString(), Details = details };

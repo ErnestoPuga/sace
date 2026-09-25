@@ -7,10 +7,22 @@ namespace Sace.Api.Infrastructure;
 public static class DbSeeder {
   private sealed record TypeSeed(string Code, string Name, string Description, CorrectionResponsible Responsible);
   public static async Task SeedAsync(IServiceProvider services) {
-    using var scope = services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<SaceDbContext>(); await db.Database.MigrateAsync();
+    using var scope = services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<SaceDbContext>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
     var passwords = scope.ServiceProvider.GetRequiredService<IPasswordService>();
-    var admin = await db.Users.FirstOrDefaultAsync(x => x.Email == "admin@sace.local");
-    if (admin is null) { admin = new User { Name = "Administrador SACE", Email = "admin@sace.local", PasswordHash = passwords.Hash("Admin123!") }; db.Users.Add(admin); await db.SaveChangesAsync(); }
+    if (configuration.GetValue<bool>("PilotUser:Enabled")) {
+      var email = configuration["PilotUser:Email"]?.Trim().ToLowerInvariant();
+      var password = configuration["PilotUser:Password"];
+      var displayName = configuration["PilotUser:DisplayName"]?.Trim();
+      if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(displayName))
+        throw new InvalidOperationException("PilotUser está habilitado, pero faltan Email, Password o DisplayName.");
+      if (!await db.Users.AnyAsync(x => x.Email == email)) {
+        var pilot = new User { Name = displayName, Email = email, PasswordHash = passwords.Hash(password) };
+        db.Users.Add(pilot);
+        db.SystemAuditLogs.Add(new SystemAuditLog { UserId = pilot.Id, Action = "PILOT_USER_CREATED", EntityType = "User", EntityId = pilot.Id.ToString(), Details = "Usuario piloto creado desde configuración segura." });
+        await db.SaveChangesAsync();
+      }
+    }
 
     var definitions = new[] {
       new TypeSeed("PEDIMENTO", "Pedimento", "Documento de pedimento; su obligatoriedad depende exclusivamente de reglas configuradas.", CorrectionResponsible.CustomsBroker),
@@ -66,6 +78,9 @@ public static class DbSeeder {
     }
     await db.SaveChangesAsync();
 
+    if (!configuration.GetValue<bool>("Seed:DemoData")) return;
+    var admin = await db.Users.FirstOrDefaultAsync(x => x.Email == "admin@sace.local");
+    if (admin is null) { admin = new User { Name = "Administrador SACE", Email = "admin@sace.local", PasswordHash = passwords.Hash("Admin123!") }; db.Users.Add(admin); await db.SaveChangesAsync(); }
     if (await db.TradeOperations.AnyAsync(x => x.Folio == "IMP-2026-000001")) return;
     var docs = await db.DocumentTypes.ToDictionaryAsync(x => x.Code, StringComparer.OrdinalIgnoreCase);
     var countries = new[] { ("Estados Unidos", "México"), ("Alemania", "México"), ("México", "Canadá"), ("China", "México") }; var operations = new List<TradeOperation>();

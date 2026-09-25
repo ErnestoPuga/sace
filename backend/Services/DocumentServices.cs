@@ -17,13 +17,13 @@ public interface IFileStorageService {
 }
 
 public sealed class LocalFileStorageService(IConfiguration configuration, IWebHostEnvironment environment) : IFileStorageService {
-  private readonly string root = Path.GetFullPath(Path.Combine(environment.ContentRootPath, configuration["FileStorage:RootPath"] ?? "../storage"));
+  private readonly string root = ResolveRoot(configuration, environment);
   public async Task<(string storedName, string relativePath)> SaveAsync(Guid operationId, string documentCode, IFormFile file, CancellationToken ct) {
     var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
     var stored = $"{Guid.NewGuid():N}{extension}";
     var relative = Path.Combine("operations", operationId.ToString(), Safe(documentCode), stored);
     var full = Path.GetFullPath(Path.Combine(root, relative));
-    if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Ruta de almacenamiento inválida.");
+    if (!IsInsideRoot(root, full)) throw new InvalidOperationException("Ruta de almacenamiento inválida.");
     Directory.CreateDirectory(Path.GetDirectoryName(full)!);
     await using var output = File.Create(full);
     await file.CopyToAsync(output, ct);
@@ -31,8 +31,16 @@ public sealed class LocalFileStorageService(IConfiguration configuration, IWebHo
   }
   public Task<Stream?> OpenAsync(string relativePath, CancellationToken ct) {
     var full = Path.GetFullPath(Path.Combine(root, relativePath));
-    if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(full)) return Task.FromResult<Stream?>(null);
+    if (!IsInsideRoot(root, full) || !File.Exists(full)) return Task.FromResult<Stream?>(null);
     return Task.FromResult<Stream?>(File.OpenRead(full));
+  }
+  private static string ResolveRoot(IConfiguration config, IWebHostEnvironment env) {
+    var configured = config["Storage:RootPath"] ?? config["FileStorage:RootPath"] ?? "../storage";
+    return Path.GetFullPath(Path.IsPathRooted(configured) ? configured : Path.Combine(env.ContentRootPath, configured));
+  }
+  private static bool IsInsideRoot(string rootPath, string fullPath) {
+    var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+    return fullPath.Equals(rootPath, comparison) || fullPath.StartsWith(rootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, comparison);
   }
   private static string Safe(string value) => string.Concat(value.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) || c == '-' ? c : '-'));
 }
@@ -98,7 +106,7 @@ public sealed class DocumentValidationService(IConfiguration config, IXmlDocumen
   private static readonly Dictionary<string, string[]> Allowed = new(StringComparer.OrdinalIgnoreCase) { [".pdf"] = ["application/pdf", "application/octet-stream"], [".xml"] = ["application/xml", "text/xml", "application/octet-stream"], [".xlsx"] = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/octet-stream"] };
   public async Task<DocumentValidationResult> ValidateAsync(IFormFile file, CancellationToken ct) {
     if (file.Length <= 0) return new(false, "EMPTY_FILE", "El archivo se encuentra vacío y no puede ser procesado.");
-    var max = config.GetValue<long>("FileStorage:MaxFileSizeMb", 10) * 1024 * 1024;
+    var max = (config.GetValue<long?>("Uploads:MaxFileSizeMb") ?? config.GetValue<long?>("FileStorage:MaxFileSizeMb") ?? 25) * 1024 * 1024;
     if (file.Length > max) return new(false, "FILE_TOO_LARGE", $"El archivo excede el límite de {max / 1024 / 1024} MB.");
     var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
     if (!Allowed.TryGetValue(ext, out var mimes)) return new(false, "UNSUPPORTED_FILE_TYPE", $"El formato {(string.IsNullOrWhiteSpace(ext) ? "sin extensión" : ext.ToUpperInvariant())} todavía no está soportado por SACE.");

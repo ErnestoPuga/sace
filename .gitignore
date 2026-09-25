@@ -50,9 +50,6 @@ Thumbs.db
 # Mantener placeholders
 !.gitkeep
 
-.gitignore "`n# Build artifacts"
-.gitignore "**/.artifacts/"
-.gitignore "*.tsbuildinfo"
 **/.artifacts/
 *.tsbuildinfo
 frontend/vite.config.js

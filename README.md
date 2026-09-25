@@ -1,5 +1,7 @@
 # SACE
 
+La guía para publicar el piloto en Render y Vercel está en [docs/DEPLOYMENT_PILOT.md](docs/DEPLOYMENT_PILOT.md).
+
 **Sistema Auditor de Comercio Exterior** es un MVP de extremo a extremo para registrar expedientes, administrar documentos, evaluar controles normativos acotados, generar hallazgos, corregir documentos y conservar trazabilidad.
 
 ## Importante
