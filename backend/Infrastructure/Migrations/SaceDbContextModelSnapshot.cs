@@ -151,6 +151,181 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("AuditResults");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.CrossValidationResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AuditId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<Guid>("CrossValidationRuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EvaluatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NumericDifference")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("PercentDifference")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RuleCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RuleVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("SourceDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceNormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceRawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TargetDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TargetFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetNormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetRawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditId");
+
+                    b.HasIndex("CrossValidationRuleId");
+
+                    b.HasIndex("RuleCode");
+
+                    b.HasIndex("SourceDocumentId");
+
+                    b.HasIndex("SourceFieldId");
+
+                    b.HasIndex("TargetDocumentId");
+
+                    b.HasIndex("TargetFieldId");
+
+                    b.HasIndex("TradeOperationId");
+
+                    b.HasIndex("TradeOperationId", "RuleCode", "EvaluatedAt");
+
+                    b.ToTable("CrossValidationResults");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CrossValidationRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("AbsoluteTolerance")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ComparisonType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MissingEvidenceBehavior")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("PercentTolerance")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceDocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetDocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code", "Version")
+                        .IsUnique();
+
+                    b.ToTable("CrossValidationRules");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.CustomsValueAdjustment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -195,6 +370,69 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("TradeOperationId");
 
                     b.ToTable("CustomsValueAdjustments");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExtractionMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GroupKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsManuallyConfirmed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OperationDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceLocator")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationDocumentId", "FieldCode");
+
+                    b.HasIndex("OperationDocumentId", "FieldCode", "Sequence");
+
+                    b.ToTable("DocumentFields");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.DocumentReference", b =>
@@ -749,6 +987,60 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("ReviewerUser");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.CrossValidationResult", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.Audit", "Audit")
+                        .WithMany()
+                        .HasForeignKey("AuditId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.CrossValidationRule", "CrossValidationRule")
+                        .WithMany("Results")
+                        .HasForeignKey("CrossValidationRuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "SourceDocument")
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentField", "SourceField")
+                        .WithMany()
+                        .HasForeignKey("SourceFieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "TargetDocument")
+                        .WithMany()
+                        .HasForeignKey("TargetDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentField", "TargetField")
+                        .WithMany()
+                        .HasForeignKey("TargetFieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("CrossValidationResults")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Audit");
+
+                    b.Navigation("CrossValidationRule");
+
+                    b.Navigation("SourceDocument");
+
+                    b.Navigation("SourceField");
+
+                    b.Navigation("TargetDocument");
+
+                    b.Navigation("TargetField");
+
+                    b.Navigation("TradeOperation");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.CustomsValueAdjustment", b =>
                 {
                     b.HasOne("Sace.Api.Domain.OperationDocument", "SourceDocument")
@@ -765,6 +1057,17 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("SourceDocument");
 
                     b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentField", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
+                        .WithMany("Fields")
+                        .HasForeignKey("OperationDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OperationDocument");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.DocumentReference", b =>
@@ -849,6 +1152,11 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Results");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.CrossValidationRule", b =>
+                {
+                    b.Navigation("Results");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.Finding", b =>
                 {
                     b.Navigation("History");
@@ -856,6 +1164,8 @@ namespace Sace.Api.Infrastructure.Migrations
 
             modelBuilder.Entity("Sace.Api.Domain.OperationDocument", b =>
                 {
+                    b.Navigation("Fields");
+
                     b.Navigation("References");
                 });
 
@@ -864,6 +1174,8 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Adjustments");
 
                     b.Navigation("Audits");
+
+                    b.Navigation("CrossValidationResults");
 
                     b.Navigation("Documents");
 

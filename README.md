@@ -10,12 +10,15 @@ La guía para publicar el piloto en Render y Vercel está en [docs/DEPLOYMENT_PI
 
 Las reglas `DEMO-*` y controles `TECH-*` se conservan por compatibilidad, pero están excluidos del cálculo legal. Las reglas `LEGAL-*` tienen fundamento, vigencia, versión, evidencia y resultado trazable. Véase [docs/NORMATIVE_ENGINE.md](docs/NORMATIVE_ENGINE.md).
 
+SACE 2.0 añade un motor independiente de cruces documentales. Sus resultados `MATCH`, `MISMATCH` o de evidencia faltante no modifican resultados `LEGAL`. Véase [docs/CROSS_VALIDATION_ENGINE.md](docs/CROSS_VALIDATION_ENGINE.md).
+
 ## Arquitectura
 
 - Monorepo con backend, frontend, pruebas, almacenamiento y documentación.
 - Backend: ASP.NET Core 10 Minimal API, C#, EF Core 10, SQLite, JWT y Swagger/OpenAPI.
 - Frontend: React, TypeScript, Vite, React Router, TailwindCSS, Axios, Recharts y Lucide.
 - Reglas DEMO/técnicas encapsuladas en `IAuditEngine`, motor normativo en `ILegalAuditEngine` y consolidación mensual en `IMonthlyAuditRule`.
+- Extracción de `DocumentField`, normalización y reglas versionadas de cruces encapsuladas en `IDocumentFieldExtractor`, `IFieldNormalizationService` e `ICrossValidationEngine`.
 - Procesadores futuros desacoplados mediante `IPedimentoParser`, `IXmlDocumentProcessor`, `IPdfDocumentProcessor` e `IExcelDocumentProcessor`.
 - Almacenamiento desacoplado mediante `IFileStorageService`; la implementación MVP es local y usa nombres físicos aleatorios.
 - Auditoría diaria programada mediante `DailyAuditWorker`, además de ejecución manual e inmediata al crear una operación.
@@ -52,7 +55,7 @@ La aplicación queda en `http://localhost:5173`. `VITE_API_URL` permite cambiar 
 
 ## Base de datos
 
-SQLite crea `backend/sace.db`. El modelo incluye usuarios, operaciones, tipos documentales, versiones de documentos, auditorías, resultados, hallazgos, historial de hallazgos, reglas versionadas y bitácora del sistema.
+SQLite crea `backend/sace.db`. El modelo incluye usuarios, operaciones, tipos documentales, versiones de documentos, campos extraídos, auditorías, resultados LEGAL, resultados de cruces, hallazgos, reglas versionadas y bitácora del sistema.
 
 Los archivos se guardan fuera de la raíz pública en:
 
@@ -65,6 +68,8 @@ Los registros documentales sembrados son metadata demo y no apuntan a PDFs físi
 ## Migraciones
 
 La migración inicial está en `backend/Infrastructure/Migrations`.
+
+`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`, con índices y relaciones reversibles.
 
 ```powershell
 cd backend
@@ -160,6 +165,10 @@ SACE/
 - `POST /api/operations/{id}/documents`
 - `POST /api/operations/{id}/documents/analyze`
 - `POST /api/operations/{id}/documents/bulk`
+- `GET /api/operations/{id}/document-fields`
+- `POST /api/operations/{id}/document-fields/reextract`
+- `GET /api/operations/{id}/cross-validations`
+- `POST /api/operations/{id}/cross-validations/run`
 - `GET|PATCH /api/operations/{operationId}/documents/{documentId}`
 - `GET /api/operations/{id}/requirements`
 - `POST /api/operations/{id}/audit`
@@ -195,23 +204,22 @@ Salvo login y health, todos requieren `Authorization: Bearer {token}`. Los error
 ## Pruebas
 
 ```powershell
-dotnet restore SACE.sln
+dotnet restore SACE.sln --configfile NuGet.Config
 dotnet build SACE.sln --no-restore
 dotnet test SACE.sln --no-build --no-restore
 
-cd frontend
-npm install
-npm run build
-npm run lint
+npm ci --prefix frontend
+npm run build --prefix frontend
+npm run lint --prefix frontend
 ```
 
-La suite cubre el flujo existente y 21 casos del motor LEGAL: vigencias, exclusión DEMO/TECH, pedimento, factura, COVE, evidencia insuficiente, origen, RRNA, incrementables, hallazgos y revisión humana.
+La suite cubre el flujo existente, el motor LEGAL, clasificación y extracción, normalización, cruces, seguridad, auditoría mensual y migración nueva/incremental/reversible.
 
 ## Limitaciones actuales del MVP
 
 - El corpus LEGAL v1 es limitado y requiere validación especializada antes de uso productivo; la auditoría mensual continúa siendo DEMO.
 - El XML solo se valida sintácticamente; no existe parser oficial SAT/VUCEM.
-- PDF se valida por firma y XLSX por estructura ZIP mínima; no hay OCR ni extracción avanzada.
+- PdfPig extrae únicamente texto ya embebido en PDF; no hay OCR ni interpretación visual.
 - SQLite y almacenamiento local son adecuados para demostración, no para despliegue distribuido.
 - Existe un solo rol y no hay multiempresa.
 - No hay integración con SAT, ANAM, VUCEM, agentes aduanales ni servicios de notificación.

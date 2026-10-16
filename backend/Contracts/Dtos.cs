@@ -7,7 +7,7 @@ public record RequirementDto(Guid DocumentTypeId, string DocumentType, string Co
 public record ChangeFindingStatusRequest(FindingStatus Status, string? Comment);
 public record RuleRequest(string Code, string Name, NormativeSource NormativeSource, string Description, string RuleType, DateTime EffectiveFrom, DateTime? EffectiveTo, bool IsActive, string ConfigurationJson, RuleCategory RuleCategory = RuleCategory.DEMO, string? SourceDocument = null, string? Article = null, string? Section = null, string? Subsection = null, string? RuleNumber = null, string? Annex = null, string? Appendix = null, string? OfficialUrl = null, DateTime? PublicationDate = null, AutomationLevel AutomationLevel = AutomationLevel.AUTOMATIC, bool RequiresManualReview = false, bool IsLegalRule = false, bool IsIncludedInLegalCompliance = false);
 public record ApiError(int Status, string Code, string Message, object Errors);
-public record DocumentClassificationDto(string DocumentTypeCode, double Confidence, string Reason, bool RequiresManualSelection);
+public record DocumentClassificationDto(string DocumentTypeCode, double Confidence, string Reason, bool RequiresManualSelection, IReadOnlyList<string>? Evidence = null, string? ConfidenceBand = null);
 public record DocumentMetadataRequest(string? DocumentNumber, DateTime? DocumentDate, string? SourceSystem, string? Notes);
 public record DocumentReferenceRequest(string ReferenceType, string Value, string? Source);
 public record UpdateDocumentRequest(string? DocumentNumber, DateTime? DocumentDate, string? SourceSystem, string? Notes, IReadOnlyList<DocumentReferenceRequest>? References);

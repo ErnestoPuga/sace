@@ -16,6 +16,15 @@ public enum LegalOutcome { COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIEN
 public enum EvaluationDateBasis { OPERATION_DATE, ENTRY_DATE, PAYMENT_DATE, PRESENTATION_DATE }
 public enum AdjustmentType { INCREMENTABLE, NON_INCREMENTABLE, UNKNOWN }
 public enum LegalQualificationStatus { CONFIRMED, PENDING_REVIEW }
+public enum DocumentFieldDataType { TEXT, IDENTIFIER, DECIMAL, CURRENCY, QUANTITY, WEIGHT, DATE }
+public enum ExtractionMethod { XML, PDF_TEXT, FILENAME, EXISTING_METADATA, MANUAL }
+public enum CrossComparisonType { EXACT_TEXT, NORMALIZED_TEXT, NORMALIZED_IDENTIFIER, EXACT_NUMERIC, NUMERIC_TOLERANCE, PERCENT_TOLERANCE, CURRENCY_AMOUNT, DATE, PRESENCE }
+public enum MissingEvidenceBehavior { INSUFFICIENT_EVIDENCE, MANUAL_REVIEW, NOT_APPLICABLE }
+public enum CrossValidationOutcome { MATCH, MISMATCH, INSUFFICIENT_EVIDENCE, MANUAL_REVIEW, NOT_APPLICABLE }
+
+public static class DocumentFieldCodes {
+  public const string PedimentoNumber="PEDIMENTO_NUMBER", OperationType="OPERATION_TYPE", EntryDate="ENTRY_DATE", Date="DATE", DocumentNumber="DOCUMENT_NUMBER", CustomsOffice="CUSTOMS_OFFICE", InvoiceNumber="INVOICE_NUMBER", CoveNumber="COVE_NUMBER", TariffFraction="TARIFF_FRACTION", Nico="NICO", Description="DESCRIPTION", Quantity="QUANTITY", Unit="UNIT", UnitPrice="UNIT_PRICE", CommercialValue="COMMERCIAL_VALUE", TotalAmount="TOTAL_AMOUNT", Currency="CURRENCY", Incoterm="INCOTERM", NetWeight="NET_WEIGHT", GrossWeight="GROSS_WEIGHT", PackageCount="PACKAGE_COUNT", OriginCountry="ORIGIN_COUNTRY", DestinationCountry="DESTINATION_COUNTRY", SupplierName="SUPPLIER_NAME", BuyerName="BUYER_NAME", TransportReference="TRANSPORT_REFERENCE", TransportMode="TRANSPORT_MODE", Origin="ORIGIN", Destination="DESTINATION", Carrier="CARRIER", ExchangeRate="EXCHANGE_RATE", DeclaredCustomsValue="DECLARED_CUSTOMS_VALUE";
+}
 
 public class User { public Guid Id { get; set; } = Guid.NewGuid(); public string Name { get; set; } = ""; public string Email { get; set; } = ""; public string PasswordHash { get; set; } = ""; public string Role { get; set; } = "Usuario"; public bool IsActive { get; set; } = true; public DateTime CreatedAt { get; set; } = DateTime.UtcNow; }
 public class TradeOperation {
@@ -30,7 +39,7 @@ public class TradeOperation {
   public decimal? ExchangeRate { get; set; } public decimal? DeclaredCustomsValueMxn { get; set; } public string? Incoterm { get; set; }
   public string? Nico { get; set; } public string? GoodsDescription { get; set; }
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = [];
+  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = []; public List<CrossValidationResult> CrossValidationResults { get; set; } = [];
 }
 public class DocumentType { public Guid Id { get; set; } = Guid.NewGuid(); public string Code { get; set; } = ""; public string Name { get; set; } = ""; public string Description { get; set; } = ""; public CorrectionResponsible CorrectionResponsible { get; set; } public bool IsActive { get; set; } = true; }
 public class OperationDocument {
@@ -42,7 +51,7 @@ public class OperationDocument {
   public DateTime UploadedAt { get; set; } = DateTime.UtcNow; public Guid UploadedBy { get; set; }
   public string? DocumentNumber { get; set; } public DateTime? DocumentDate { get; set; } public string? SourceSystem { get; set; }
   public string? Notes { get; set; } public string? FileHash { get; set; } public string? ExtractedMetadataJson { get; set; }
-  public List<DocumentReference> References { get; set; } = [];
+  public List<DocumentReference> References { get; set; } = []; public List<DocumentField> Fields { get; set; } = [];
 }
 public class DocumentReference {
   public Guid Id { get; set; } = Guid.NewGuid(); public Guid OperationDocumentId { get; set; }
@@ -67,5 +76,31 @@ public class NormativeRule {
 }
 public class CustomsValueAdjustment {
   public Guid Id { get; set; } = Guid.NewGuid(); public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!; public string Concept { get; set; } = ""; public string? Description { get; set; } public decimal Amount { get; set; } public string Currency { get; set; } = "USD"; public AdjustmentType AdjustmentType { get; set; } = AdjustmentType.UNKNOWN; public LegalQualificationStatus LegalQualificationStatus { get; set; } = LegalQualificationStatus.PENDING_REVIEW; public Guid? SourceDocumentId { get; set; } public OperationDocument? SourceDocument { get; set; } public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+public class DocumentField {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid OperationDocumentId { get; set; } public OperationDocument OperationDocument { get; set; } = null!;
+  public string FieldCode { get; set; } = ""; public string? RawValue { get; set; } public string? NormalizedValue { get; set; }
+  public DocumentFieldDataType DataType { get; set; } = DocumentFieldDataType.TEXT; public string? Unit { get; set; } public string? Currency { get; set; }
+  public double? Confidence { get; set; } public ExtractionMethod ExtractionMethod { get; set; } public string? SourceLocator { get; set; }
+  public string? GroupKey { get; set; } public int? Sequence { get; set; } public bool IsManuallyConfirmed { get; set; }
+  public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+public class CrossValidationRule {
+  public Guid Id { get; set; } = Guid.NewGuid(); public string Code { get; set; } = ""; public int Version { get; set; } = 1; public string Name { get; set; } = ""; public string Description { get; set; } = ""; public string Category { get; set; } = "Otros";
+  public string SourceDocumentTypeCode { get; set; } = ""; public string SourceFieldCode { get; set; } = ""; public string TargetDocumentTypeCode { get; set; } = ""; public string TargetFieldCode { get; set; } = "";
+  public CrossComparisonType ComparisonType { get; set; } public decimal? AbsoluteTolerance { get; set; } public decimal? PercentTolerance { get; set; } public Severity Severity { get; set; } = Severity.Medium;
+  public MissingEvidenceBehavior MissingEvidenceBehavior { get; set; } = MissingEvidenceBehavior.INSUFFICIENT_EVIDENCE; public bool IsActive { get; set; } = true; public DateTime? EffectiveFrom { get; set; } public DateTime? EffectiveTo { get; set; }
+  public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow; public List<CrossValidationResult> Results { get; set; } = [];
+}
+public class CrossValidationResult {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!; public Guid? AuditId { get; set; } public Audit? Audit { get; set; }
+  public Guid CrossValidationRuleId { get; set; } public CrossValidationRule CrossValidationRule { get; set; } = null!; public string RuleCode { get; set; } = ""; public int RuleVersion { get; set; }
+  public Guid? SourceDocumentId { get; set; } public OperationDocument? SourceDocument { get; set; } public Guid? TargetDocumentId { get; set; } public OperationDocument? TargetDocument { get; set; }
+  public Guid? SourceFieldId { get; set; } public DocumentField? SourceField { get; set; } public Guid? TargetFieldId { get; set; } public DocumentField? TargetField { get; set; }
+  public string? SourceRawValue { get; set; } public string? TargetRawValue { get; set; } public string? SourceNormalizedValue { get; set; } public string? TargetNormalizedValue { get; set; }
+  public CrossValidationOutcome Outcome { get; set; } public decimal? NumericDifference { get; set; } public decimal? PercentDifference { get; set; } public double? Confidence { get; set; }
+  public string Explanation { get; set; } = ""; public DateTime EvaluatedAt { get; set; } = DateTime.UtcNow;
+  [System.ComponentModel.DataAnnotations.Schema.NotMapped] public ExtractionMethod? SourceExtractionMethod => SourceField?.ExtractionMethod;
+  [System.ComponentModel.DataAnnotations.Schema.NotMapped] public ExtractionMethod? TargetExtractionMethod => TargetField?.ExtractionMethod ?? (TargetFieldId is null && TargetRawValue is not null ? ExtractionMethod.EXISTING_METADATA : null);
 }
 public class SystemAuditLog { public Guid Id { get; set; } = Guid.NewGuid(); public Guid? UserId { get; set; } public User? User { get; set; } public string Action { get; set; } = ""; public string EntityType { get; set; } = ""; public string EntityId { get; set; } = ""; public string Details { get; set; } = ""; public DateTime Timestamp { get; set; } = DateTime.UtcNow; }

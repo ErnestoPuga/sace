@@ -118,9 +118,9 @@ public sealed class DocumentValidationService(IConfiguration config, IXmlDocumen
   }
 }
 
-public record DocumentClassification(string DocumentTypeCode, double Confidence, string Reason) { public bool RequiresManualSelection => Confidence < .60 || DocumentTypeCode == "OTHER"; }
+public record DocumentClassification(string DocumentTypeCode, double Confidence, string Reason, IReadOnlyList<string> Evidence, string ConfidenceBand, bool RequiresManualSelection);
 public interface IDocumentClassifier { Task<DocumentClassification> ClassifyAsync(IFormFile file, CancellationToken ct); }
-public sealed class DocumentClassifier(IXmlDocumentProcessor xml) : IDocumentClassifier {
+public sealed class DocumentClassifier(IXmlDocumentProcessor xml, IPdfTextExtractor pdfText, IConfiguration config) : IDocumentClassifier {
   private static readonly (Regex Pattern, string Code, double Confidence, string Reason)[] Rules = [
     (new(@"PS01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PEDIMENTO", .95, "Patrón de nombre PS01"), (new(@"FC01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "COMMERCIAL_INVOICE", .95, "Patrón de nombre FC01"),
     (new(@"PL01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PACKING_LIST", .95, "Patrón de nombre PL01"), (new(@"TR01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "TRANSPORT_DOCUMENT", .95, "Patrón de nombre TR01"),
@@ -129,13 +129,28 @@ public sealed class DocumentClassifier(IXmlDocumentProcessor xml) : IDocumentCla
   ];
   public async Task<DocumentClassification> ClassifyAsync(IFormFile file, CancellationToken ct) {
     var safeName = Path.GetFileNameWithoutExtension(file.FileName);
-    if (Regex.IsMatch(safeName, @"^CARTAS\d+$", RegexOptions.IgnoreCase)) return new("OTHER", .20, "Las cartas requieren selección manual; el número no determina su naturaleza.");
-    foreach (var rule in Rules) if (rule.Pattern.IsMatch(safeName)) return new(rule.Code, rule.Confidence, rule.Reason);
+    var high=config.GetValue("Classification:HighConfidence",.85);var medium=config.GetValue("Classification:MediumConfidence",.60);var filenameWeight=config.GetValue("Classification:FilenameWeight",.55);var textWeight=config.GetValue("Classification:TextSignalWeight",.22);
+    DocumentClassification Result(string code,double confidence,List<string> evidence,string reason){confidence=Math.Min(.99,confidence);var band=confidence>=high?"HIGH":confidence>=medium?"MEDIUM":"LOW";return new(code,confidence,reason,evidence,band,band!="HIGH"||code=="OTHER");}
+    foreach (var rule in Rules) if (rule.Pattern.IsMatch(safeName)) return Result(rule.Code,rule.Confidence,[rule.Reason],rule.Reason);
     if (Path.GetExtension(file.FileName).Equals(".xml", StringComparison.OrdinalIgnoreCase) && file.Length > 0) {
       await using var stream = file.OpenReadStream(); var result = await xml.AnalyzeAsync(stream, ct);
-      return result.Format switch { "CFDI" => new("CUSTOMS_BROKER_INVOICE", .92, "Namespace y estructura CFDI reconocidos"), "COVE" => new("COVE_ACK", .90, "Referencia COVE reconocida en XML"), "DODA" => new("DODA", .90, "Estructura DODA reconocida en XML"), "DIG_ENVIO" or "DIG_RECIBO" => new("EDOCUMENT_ACK", .85, $"Estructura {result.Format} reconocida"), _ => new("OTHER", .30, "Formato XML válido, pero sin estructura conocida") };
+      return result.Format switch { "CFDI" => Result("CUSTOMS_BROKER_INVOICE",.92,["Namespace y estructura CFDI"],"Namespace y estructura CFDI reconocidos"), "COVE" => Result("COVE_ACK",.90,["Referencia COVE en XML"],"Referencia COVE reconocida en XML"), "DODA" => Result("DODA",.90,["Estructura DODA en XML"],"Estructura DODA reconocida en XML"), "DIG_ENVIO" or "DIG_RECIBO" => Result("EDOCUMENT_ACK",.85,[$"Estructura {result.Format}"],$"Estructura {result.Format} reconocida"), _ => Result("OTHER",.30,["XML válido sin estructura conocida"],"Formato XML válido, pero sin estructura conocida") };
     }
-    return new("OTHER", .25, "No se encontró una regla de clasificación confiable.");
+    var candidates=new Dictionary<string,(double Score,List<string> Evidence)>(StringComparer.OrdinalIgnoreCase);
+    void Signal(string code,bool found,string evidence,double weight){if(!found)return;if(!candidates.TryGetValue(code,out var item))item=(0,[]);item.Score+=weight;item.Evidence.Add(evidence);candidates[code]=item;}
+    Signal("CARTA_318",Regex.IsMatch(safeName,@"(?i)(CARTA[_\- ]?318|3[._\- ]?1[._\- ]?8)"),"Nombre de archivo: Carta 3.1.8",filenameWeight);
+    Signal("DECLARACION_INCREMENTABLES",Regex.IsMatch(safeName,@"(?i)INCREMENTABLES?"),"Nombre de archivo: incrementables",filenameWeight);
+    Signal("CARTA_ENCOMIENDA",Regex.IsMatch(safeName,@"(?i)(ENCOMIENDA|AGENTE[_\- ]?ADUANAL)"),"Nombre de archivo: encomienda",filenameWeight);
+    Signal("MANIFESTACION_VALOR_MV_MVE",Regex.IsMatch(safeName,@"(?i)(MANIFESTACI[OÓ]N[_\- ]?(DE[_\- ]?)?VALOR|HOJA[_\- ]?DE[_\- ]?C[AÁ]LCULO|(^|[_\- ])MVE?($|[_\- ]))"),"Nombre de archivo: MV/MVE",filenameWeight);
+    string text="";if(Path.GetExtension(file.FileName).Equals(".pdf",StringComparison.OrdinalIgnoreCase)&&file.Length>0){await using var stream=file.OpenReadStream();text=await pdfText.ExtractAsync(stream,ct);}
+    void Text(string code,string pattern,string evidence)=>Signal(code,text.Length>0&&Regex.IsMatch(text,pattern,RegexOptions.IgnoreCase),evidence,textWeight);
+    Text("CARTA_318",@"\b3\.1\.8\b","Texto: regla 3.1.8");Text("CARTA_318",@"\b36\s*-?\s*A\b","Texto: artículo 36-A");Text("CARTA_318",@"proveedor|importador|destinatario","Texto: participantes comerciales");Text("CARTA_318",@"valor.{0,20}mercanc","Texto: valor de mercancías");
+    Text("DECLARACION_INCREMENTABLES",@"incrementables?","Texto: incrementables");Text("DECLARACION_INCREMENTABLES",@"flete|seguro|embalaje|gastos","Texto: gastos asociados");
+    Text("CARTA_ENCOMIENDA",@"carta\s+de\s+encomienda|\bencomienda\b","Texto: carta de encomienda");Text("CARTA_ENCOMIENDA",@"agente\s+aduanal|mandante","Texto: agente/mandante");Text("CARTA_ENCOMIENDA",@"art[ií]culo\s+(40|59)","Texto: referencia artículo 40/59");
+    Text("MANIFESTACION_VALOR_MV_MVE",@"manifestaci[oó]n\s+de\s+valor|hoja\s+de\s+c[aá]lculo|\bMVE?\b","Texto: MV/MVE");Text("MANIFESTACION_VALOR_MV_MVE",@"valor\s+en\s+aduana|precio\s+pagado|m[eé]todo\s+de\s+valoraci[oó]n|incrementables?","Texto: conceptos de valoración");
+    if(Regex.IsMatch(safeName,@"^CARTAS\d+$",RegexOptions.IgnoreCase)&&candidates.Count==0)return Result("OTHER",.45,["Nombre ambiguo CARTAS<número>"],"El nombre de carta es ambiguo; requiere selección manual.");
+    if(candidates.Count>0){var best=candidates.OrderByDescending(x=>x.Value.Score).First();return Result(best.Key,best.Value.Score,best.Value.Evidence,best.Value.Evidence[0]);}
+    return Result("OTHER",text.Length==0?.20:.30,text.Length==0?["PDF sin texto extraíble o nombre no concluyente"]:["Sin señales documentales suficientes"],"No se encontró una regla de clasificación confiable.");
   }
 }
 
@@ -144,7 +159,7 @@ public record BulkFileResult(string FileName, string Status, Guid? DocumentId, s
 public record BulkUploadResult(int Total, int Accepted, int Rejected, int DuplicatesSkipped, IReadOnlyList<BulkFileResult> Files);
 public interface IDocumentProcessingService { Task<IReadOnlyList<DocumentAnalysisItem>> AnalyzeAsync(Guid operationId, IReadOnlyList<IFormFile> files, CancellationToken ct); Task<BulkUploadResult> UploadBulkAsync(Guid operationId, IReadOnlyList<IFormFile> files, IReadOnlyList<string> documentTypeCodes, bool skipDuplicate, Guid userId, CancellationToken ct); }
 
-public sealed class DocumentProcessingService(SaceDbContext db, IDocumentValidationService validation, IDocumentClassifier classifier, IXmlDocumentProcessor xml, IFileStorageService storage) : IDocumentProcessingService {
+public sealed class DocumentProcessingService(SaceDbContext db, IDocumentValidationService validation, IDocumentClassifier classifier, IXmlDocumentProcessor xml, IFileStorageService storage, IDocumentFieldExtractor fieldExtractor, ILogger<DocumentProcessingService> logger) : IDocumentProcessingService {
   public async Task<IReadOnlyList<DocumentAnalysisItem>> AnalyzeAsync(Guid operationId, IReadOnlyList<IFormFile> files, CancellationToken ct) {
     if (!await db.TradeOperations.AnyAsync(x => x.Id == operationId, ct)) throw new KeyNotFoundException("Operación no localizada.");
     var existing = await db.OperationDocuments.Where(x => x.TradeOperationId == operationId && x.FileHash != null).Select(x => new { x.FileHash, x.OriginalFileName }).ToListAsync(ct);
@@ -154,7 +169,7 @@ public sealed class DocumentProcessingService(SaceDbContext db, IDocumentValidat
       var duplicate = hash.Length == 0 ? null : existing.FirstOrDefault(x => x.FileHash == hash)?.OriginalFileName;
       var classification = await classifier.ClassifyAsync(file, ct); XmlDocumentAnalysis? xmlInfo = null;
       if (check.Valid && Path.GetExtension(file.FileName).Equals(".xml", StringComparison.OrdinalIgnoreCase)) { await using var stream = file.OpenReadStream(); xmlInfo = await xml.AnalyzeAsync(stream, ct); }
-      result.Add(new(Path.GetFileName(file.FileName), file.Length, Path.GetExtension(file.FileName).TrimStart('.').ToUpperInvariant(), check.Valid ? duplicate is null ? "Ready" : "PossibleDuplicate" : "Rejected", check.Code, check.Message, new(classification.DocumentTypeCode, classification.Confidence, classification.Reason, classification.RequiresManualSelection), hash, duplicate, xmlInfo?.Format, xmlInfo?.References ?? [], xmlInfo?.Metadata ?? new Dictionary<string, string>()));
+      result.Add(new(Path.GetFileName(file.FileName), file.Length, Path.GetExtension(file.FileName).TrimStart('.').ToUpperInvariant(), check.Valid ? duplicate is null ? "Ready" : "PossibleDuplicate" : "Rejected", check.Code, check.Message, new(classification.DocumentTypeCode, classification.Confidence, classification.Reason, classification.RequiresManualSelection, classification.Evidence, classification.ConfidenceBand), hash, duplicate, xmlInfo?.Format, xmlInfo?.References ?? [], xmlInfo?.Metadata ?? new Dictionary<string, string>()));
     }
     return result;
   }
@@ -175,8 +190,9 @@ public sealed class DocumentProcessingService(SaceDbContext db, IDocumentValidat
         var doc = new OperationDocument { TradeOperationId = operationId, DocumentTypeId = type.Id, OriginalFileName = safeName, StoredFileName = stored.storedName, FilePath = stored.relativePath, MimeType = file.ContentType, Extension = Path.GetExtension(safeName).ToLowerInvariant(), FileSize = file.Length, Version = version, ValidationStatus = ValidationStatus.Valid, UploadedBy = userId, FileHash = hash, DocumentNumber = xmlInfo?.DocumentNumber, DocumentDate = xmlInfo?.DocumentDate, SourceSystem = xmlInfo?.Format, ExtractedMetadataJson = xmlInfo is null || xmlInfo.Metadata.Count == 0 ? null : JsonSerializer.Serialize(xmlInfo.Metadata) };
         foreach (var reference in xmlInfo?.References ?? []) doc.References.Add(new DocumentReference { ReferenceType = reference.ReferenceType, Value = reference.Value, Source = reference.Source });
         db.OperationDocuments.Add(doc); db.SystemAuditLogs.Add(new SystemAuditLog { UserId = userId, Action = duplicate is null ? "DOCUMENT_UPLOADED" : "DUPLICATE_DOCUMENT_SAVED", EntityType = "OperationDocument", EntityId = doc.Id.ToString(), Details = $"{safeName}; tipo {type.Code}; versión {version}." }); await db.SaveChangesAsync(ct);
+        try { await fieldExtractor.ExtractDocumentAsync(doc.Id, userId, ct); } catch (Exception ex) when (ex is not OperationCanceledException) { logger.LogWarning(ex, "Automatic field extraction failed for document {DocumentId}", doc.Id); }
         results.Add(new(safeName, "Accepted", doc.Id, duplicate is null ? null : "DUPLICATE_SAVED", duplicate is null ? null : $"Guardado aunque coincide con {duplicate}.", duplicate));
-      } catch (Exception ex) when (ex is not OperationCanceledException) { db.ChangeTracker.Clear(); results.Add(new(safeName, "Rejected", null, "PROCESSING_ERROR", "No fue posible procesar este archivo.", null)); }
+      } catch (Exception ex) when (ex is not OperationCanceledException) { logger.LogError(ex,"Document processing failed for operation {OperationId}",operationId); db.ChangeTracker.Clear(); results.Add(new(safeName, "Rejected", null, "PROCESSING_ERROR", "No fue posible procesar este archivo.", null)); }
     }
     operation.UpdatedAt = DateTime.UtcNow; await db.SaveChangesAsync(ct); return new(results.Count, results.Count(x => x.Status == "Accepted"), results.Count(x => x.Status == "Rejected"), results.Count(x => x.Status == "DuplicateSkipped"), results);
   }

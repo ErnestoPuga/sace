@@ -35,6 +35,10 @@ public static class DbSeeder {
       new TypeSeed("ARTICLE_36A_DOCUMENT", "Documento / declaración relacionada con artículo 36-A", "Clasificación documental descriptiva; no implica validación jurídica.", CorrectionResponsible.Company),
       new TypeSeed("INCREMENTABLES_DECLARATION", "Declaración de incrementables", "Declaración aportada al expediente.", CorrectionResponsible.Company),
       new TypeSeed("CUSTOMS_BROKER_INSTRUCTION", "Carta de encomienda / instrucciones al agente aduanal", "Carta o instrucciones operativas al agente aduanal.", CorrectionResponsible.Company),
+      new TypeSeed("CARTA_318", "Carta 3.1.8 / Declaración de valor de mercancías", "Evidencia documental clasificatoria; no sustituye universalmente a la factura ni implica una conclusión legal.", CorrectionResponsible.Company),
+      new TypeSeed("DECLARACION_INCREMENTABLES", "Declaración de incrementables", "Declaración documental de conceptos incrementables.", CorrectionResponsible.Company),
+      new TypeSeed("CARTA_ENCOMIENDA", "Carta de encomienda / instrucciones al agente aduanal", "Instrucciones operativas aportadas al expediente.", CorrectionResponsible.Company),
+      new TypeSeed("MANIFESTACION_VALOR_MV_MVE", "Hoja de cálculo / MV - MVE", "Manifestación de Valor u hoja de cálculo según la estructura realmente aportada.", CorrectionResponsible.Company),
       new TypeSeed("EDOCUMENT_ACK", "Acuse e-Document / VUCEM", "Acuse asociado técnicamente mediante referencia e-Document.", CorrectionResponsible.CustomsBroker),
       new TypeSeed("CUSTOMS_BROKER_INVOICE", "CFDI / Cuenta de gastos del agente aduanal", "CFDI o cuenta de gastos incorporada al expediente.", CorrectionResponsible.CustomsBroker),
       new TypeSeed("IMMEX_DOCUMENT", "Documento IMMEX", "Documento IMMEX capturado; no implica que la operación sea IMMEX.", CorrectionResponsible.Company),
@@ -44,6 +48,9 @@ public static class DbSeeder {
     };
     var existingCodes = await db.DocumentTypes.Select(x => x.Code).ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
     foreach (var item in definitions.Where(x => !existingCodes.Contains(x.Code))) db.DocumentTypes.Add(new DocumentType { Code = item.Code, Name = item.Name, Description = item.Description, CorrectionResponsible = item.Responsible });
+    var legacy36A=await db.DocumentTypes.FirstOrDefaultAsync(x=>x.Code=="ARTICLE_36A_DOCUMENT"); if(legacy36A is not null)legacy36A.Name="Carta 3.1.8 / Declaración de valor de mercancías (legado)";
+    var legacyIncrementables=await db.DocumentTypes.FirstOrDefaultAsync(x=>x.Code=="INCREMENTABLES_DECLARATION"); if(legacyIncrementables is not null)legacyIncrementables.Name="Declaración de incrementables (legado)";
+    var legacyEncomienda=await db.DocumentTypes.FirstOrDefaultAsync(x=>x.Code=="CUSTOMS_BROKER_INSTRUCTION"); if(legacyEncomienda is not null)legacyEncomienda.Name="Carta de encomienda / instrucciones al agente aduanal (legado)";
 
     var effective = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     var rules = new[] {
@@ -78,6 +85,28 @@ public static class DbSeeder {
     }
     await db.SaveChangesAsync();
 
+    var crossRules = new[] {
+      Cross("CROSS-INV-PED-INVOICE-001","Factura ↔ pedimento: número de factura","Identificación","COMMERCIAL_INVOICE",DocumentFieldCodes.InvoiceNumber,"PEDIMENTO",DocumentFieldCodes.InvoiceNumber,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-INV-PED-QTY-001","Factura ↔ pedimento: cantidad","Cantidades","COMMERCIAL_INVOICE",DocumentFieldCodes.Quantity,"PEDIMENTO",DocumentFieldCodes.Quantity,CrossComparisonType.EXACT_NUMERIC),
+      Cross("CROSS-INV-PED-UNIT-001","Factura ↔ pedimento: unidad","Cantidades","COMMERCIAL_INVOICE",DocumentFieldCodes.Unit,"PEDIMENTO",DocumentFieldCodes.Unit,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-INV-PED-VALUE-001","Factura ↔ pedimento: valor comercial","Valores","COMMERCIAL_INVOICE",DocumentFieldCodes.TotalAmount,"PEDIMENTO",DocumentFieldCodes.CommercialValue,CrossComparisonType.CURRENCY_AMOUNT),
+      Cross("CROSS-INV-PED-CURRENCY-001","Factura ↔ pedimento: moneda","Valores","COMMERCIAL_INVOICE",DocumentFieldCodes.Currency,"PEDIMENTO",DocumentFieldCodes.Currency,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-INV-PED-INCOTERM-001","Factura ↔ pedimento: Incoterm","Valores","COMMERCIAL_INVOICE",DocumentFieldCodes.Incoterm,"PEDIMENTO",DocumentFieldCodes.Incoterm,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-INV-COVE-INVOICE-001","Factura ↔ COVE: número de factura","Identificación","COMMERCIAL_INVOICE",DocumentFieldCodes.InvoiceNumber,"COVE_ACK",DocumentFieldCodes.InvoiceNumber,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-INV-COVE-DESC-001","Factura ↔ COVE: descripción","Otros","COMMERCIAL_INVOICE",DocumentFieldCodes.Description,"COVE_ACK",DocumentFieldCodes.Description,CrossComparisonType.NORMALIZED_TEXT),
+      Cross("CROSS-INV-COVE-QTY-001","Factura ↔ COVE: cantidad","Cantidades","COMMERCIAL_INVOICE",DocumentFieldCodes.Quantity,"COVE_ACK",DocumentFieldCodes.Quantity,CrossComparisonType.EXACT_NUMERIC),
+      Cross("CROSS-INV-COVE-UNIT-001","Factura ↔ COVE: unidad","Cantidades","COMMERCIAL_INVOICE",DocumentFieldCodes.Unit,"COVE_ACK",DocumentFieldCodes.Unit,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-INV-COVE-VALUE-001","Factura ↔ COVE: importe","Valores","COMMERCIAL_INVOICE",DocumentFieldCodes.TotalAmount,"COVE_ACK",DocumentFieldCodes.TotalAmount,CrossComparisonType.CURRENCY_AMOUNT),
+      Cross("CROSS-INV-COVE-CURRENCY-001","Factura ↔ COVE: moneda","Valores","COMMERCIAL_INVOICE",DocumentFieldCodes.Currency,"COVE_ACK",DocumentFieldCodes.Currency,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-PL-PED-DESC-001","Packing List ↔ pedimento: descripción","Otros","PACKING_LIST",DocumentFieldCodes.Description,"PEDIMENTO",DocumentFieldCodes.Description,CrossComparisonType.NORMALIZED_TEXT),
+      Cross("CROSS-PL-PED-QTY-001","Packing List ↔ pedimento: cantidad","Cantidades","PACKING_LIST",DocumentFieldCodes.Quantity,"PEDIMENTO",DocumentFieldCodes.Quantity,CrossComparisonType.EXACT_NUMERIC),
+      Cross("CROSS-PL-PED-UNIT-001","Packing List ↔ pedimento: unidad","Cantidades","PACKING_LIST",DocumentFieldCodes.Unit,"PEDIMENTO",DocumentFieldCodes.Unit,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-PL-PED-WEIGHT-001","Packing List ↔ pedimento: peso bruto","Transporte","PACKING_LIST",DocumentFieldCodes.GrossWeight,"PEDIMENTO",DocumentFieldCodes.GrossWeight,CrossComparisonType.PERCENT_TOLERANCE,percent:2m),
+      Cross("CROSS-PL-TR-PACKAGES-001","Packing List ↔ transporte: bultos","Transporte","PACKING_LIST",DocumentFieldCodes.PackageCount,"TRANSPORT_DOCUMENT",DocumentFieldCodes.PackageCount,CrossComparisonType.EXACT_NUMERIC),
+      Cross("CROSS-PL-TR-WEIGHT-001","Packing List ↔ transporte: peso bruto","Transporte","PACKING_LIST",DocumentFieldCodes.GrossWeight,"TRANSPORT_DOCUMENT",DocumentFieldCodes.GrossWeight,CrossComparisonType.PERCENT_TOLERANCE,percent:2m)
+    };
+    var existingCross=await db.CrossValidationRules.Select(x=>new{x.Code,x.Version}).ToListAsync(); foreach(var item in crossRules.Where(x=>!existingCross.Any(e=>e.Code==x.Code&&e.Version==x.Version)))db.CrossValidationRules.Add(item); await db.SaveChangesAsync();
+
     if (!configuration.GetValue<bool>("Seed:DemoData")) return;
     var admin = await db.Users.FirstOrDefaultAsync(x => x.Email == "admin@sace.local");
     if (admin is null) { admin = new User { Name = "Administrador SACE", Email = "admin@sace.local", PasswordHash = passwords.Hash("Admin123!") }; db.Users.Add(admin); await db.SaveChangesAsync(); }
@@ -97,6 +126,7 @@ public static class DbSeeder {
     NormativeRule Demo(string code, string name, string description) => new() { Code = code, Name = name, Description = description, EffectiveFrom = effective, NormativeSource = NormativeSource.Demo, RuleCategory = RuleCategory.DEMO, IsLegalRule = false, IsIncludedInLegalCompliance = false, ConfigurationJson = "{\"demo\":true}" };
     NormativeRule Tech(string code, string name, string description) => new() { Code = code, Name = name, Description = description, EffectiveFrom = effective, NormativeSource = NormativeSource.Technical, RuleCategory = RuleCategory.TECHNICAL, IsLegalRule = false, IsIncludedInLegalCompliance = false, RuleType = "TechnicalControl", ConfigurationJson = "{\"legalInterpretation\":false}" };
     NormativeRule Legal(string code, string name, NormativeSource source, string sourceDocument, string? article, string? section, string? subsection, string? ruleNumber, AutomationLevel automation, bool manual, string description, int version = 1, DateTime? from = null, DateTime? to = null, DateTime? publication = null, string? annex = null, string? appendix = null) => new() { Code = code, Name = name, Description = description, NormativeSource = source, RuleCategory = RuleCategory.LEGAL, SourceDocument = sourceDocument, Article = article, Section = section, Subsection = subsection, RuleNumber = ruleNumber, Annex = annex, Appendix = appendix, PublicationDate = publication ?? (source == NormativeSource.CustomsLaw ? new DateTime(2025, 11, 19, 0, 0, 0, DateTimeKind.Utc) : new DateTime(2025, 12, 27, 0, 0, 0, DateTimeKind.Utc)), EffectiveFrom = from ?? effective, EffectiveTo = to, Version = version, AutomationLevel = automation, RequiresManualReview = manual, IsLegalRule = true, IsIncludedInLegalCompliance = true, RuleType = "LegalEvaluation", ConfigurationJson = code switch { "LEGAL-RGCE-318-001" => "{\"corpus\":\"SACE-LEGAL-v1\",\"thresholdUsd\":300}", "LEGAL-ANEXO22-INV-001" => "{\"corpus\":\"SACE-LEGAL-v1\",\"amountTolerance\":0.01}", "LEGAL-LA65-001" => "{\"corpus\":\"SACE-LEGAL-v1\",\"toleranceMxn\":1.00}", _ => "{\"corpus\":\"SACE-LEGAL-v1\"}" } };
+    CrossValidationRule Cross(string code,string name,string category,string sourceType,string sourceField,string targetType,string targetField,CrossComparisonType comparison,decimal? absolute=null,decimal? percent=null)=>new(){Code=code,Version=1,Name=name,Description="Comparación técnica/documental; no constituye una conclusión jurídica.",Category=category,SourceDocumentTypeCode=sourceType,SourceFieldCode=sourceField,TargetDocumentTypeCode=targetType,TargetFieldCode=targetField,ComparisonType=comparison,AbsoluteTolerance=absolute,PercentTolerance=percent,Severity=Severity.Medium,MissingEvidenceBehavior=MissingEvidenceBehavior.INSUFFICIENT_EVIDENCE,EffectiveFrom=effective};
   }
   private static void AddDemoDoc(SaceDbContext db, TradeOperation op, DocumentType type, string name, Guid userId) => db.OperationDocuments.Add(new OperationDocument { TradeOperationId = op.Id, DocumentTypeId = type.Id, OriginalFileName = name, StoredFileName = $"demo-{Guid.NewGuid():N}{Path.GetExtension(name)}", MimeType = name.EndsWith(".pdf") ? "application/pdf" : name.EndsWith(".xml") ? "application/xml" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", Extension = Path.GetExtension(name), FileSize = 1024, FilePath = $"demo/{op.Id}/{name}", Version = 1, ValidationStatus = ValidationStatus.Valid, UploadedBy = userId });
 }

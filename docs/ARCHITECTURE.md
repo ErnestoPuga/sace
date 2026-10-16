@@ -11,4 +11,28 @@ El módulo documental conserva esa separación:
 - `DocumentReference` asocia técnicamente documentos mediante COVE, e-Document, UUID CFDI, DODA u otros identificadores.
 - SHA-256 identifica contenido repetido dentro de la misma operación; no participa en autenticación.
 
+## Motor de cruces documentales
+
+Sprint 1 incorpora un flujo técnico separado del motor normativo:
+
+```text
+Document processing
+        ↓
+DocumentField extraction
+        ↓
+Normalization
+        ↓
+Cross Validation Engine
+        ↓
+CrossValidationResult
+
+Normative Engine
+        ↓
+LEGAL AuditResult
+```
+
+`CrossValidationResult != AuditResult LEGAL`. Una diferencia documental no cambia el resultado jurídico, no genera `NON_COMPLIANT` y no crea hallazgos LEGAL. Las reglas de cruce se almacenan en `CrossValidationRule`, con código/versión, vigencia y tolerancias independientes de `NormativeRule`.
+
+`IPdfTextExtractor` aísla PdfPig; `IDocumentFieldExtractor` conserva el valor original y su procedencia; `IFieldNormalizationService` produce valores comparables; `ICrossValidationEngine` guarda resultados trazables. Los detalles, reglas y limitaciones están en [CROSS_VALIDATION_ENGINE.md](CROSS_VALIDATION_ENGINE.md).
+
 > Las reglas DEMO no constituyen una interpretación jurídica ni validación oficial de cumplimiento aduanero.
