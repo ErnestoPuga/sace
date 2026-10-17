@@ -125,7 +125,14 @@ public sealed class DocumentClassifier(IXmlDocumentProcessor xml, IPdfTextExtrac
     (new(@"PS01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PEDIMENTO", .95, "Patrón de nombre PS01"), (new(@"FC01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "COMMERCIAL_INVOICE", .95, "Patrón de nombre FC01"),
     (new(@"PL01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PACKING_LIST", .95, "Patrón de nombre PL01"), (new(@"TR01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "TRANSPORT_DOCUMENT", .95, "Patrón de nombre TR01"),
     (new(@"COVE01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "COVE_ACK", .95, "Patrón de nombre COVE01"), (new(@"QR01", RegexOptions.IgnoreCase | RegexOptions.Compiled), "DODA", .95, "Patrón de nombre QR01"),
-    (new(@"DIG_ACUSE", RegexOptions.IgnoreCase | RegexOptions.Compiled), "EDOCUMENT_ACK", .93, "Patrón de nombre DIG_ACUSE")
+    (new(@"DIG_ACUSE", RegexOptions.IgnoreCase | RegexOptions.Compiled), "EDOCUMENT_ACK", .93, "Patrón de nombre DIG_ACUSE"),
+    (new(@"(?:FACTURA|INVOICE).*(?:FLETE|FREIGHT|TRANSPORTE)|(?:FLETE|FREIGHT).*(?:FACTURA|INVOICE)", RegexOptions.IgnoreCase | RegexOptions.Compiled), "TRANSPORT_SERVICE_INVOICE", .90, "Nombre de factura de transporte/flete"),
+    (new(@"P[OÓ]LIZA.*SEGURO|INSURANCE.*POLICY", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INSURANCE_POLICY", .92, "Nombre de póliza de seguro"),
+    (new(@"(?:FACTURA|INVOICE).*SEGURO|INSURANCE.*(?:FACTURA|INVOICE)", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INSURANCE_INVOICE", .90, "Nombre de factura de seguro"),
+    (new(@"(?:PAGO|PAYMENT).*SEGURO|INSURANCE.*(?:PAGO|PAYMENT)", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INSURANCE_PAYMENT", .90, "Nombre de pago de seguro"),
+    (new(@"(?:FACTURA|INVOICE).*INCREMENTABLE", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INCREMENTABLE_INVOICE", .90, "Nombre de factura de incrementables"),
+    (new(@"(?:PAGO|PAYMENT).*INCREMENTABLE", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INCREMENTABLE_PAYMENT", .90, "Nombre de pago de incrementables"),
+    (new(@"(?:PAGO|PAYMENT).*(?:COMPRA|MERCANC[IÍ]A)|PURCHASE.*PAYMENT", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PURCHASE_PAYMENT", .90, "Nombre de pago de mercancía")
   ];
   public async Task<DocumentClassification> ClassifyAsync(IFormFile file, CancellationToken ct) {
     var safeName = Path.GetFileNameWithoutExtension(file.FileName);
@@ -148,6 +155,12 @@ public sealed class DocumentClassifier(IXmlDocumentProcessor xml, IPdfTextExtrac
     Text("DECLARACION_INCREMENTABLES",@"incrementables?","Texto: incrementables");Text("DECLARACION_INCREMENTABLES",@"flete|seguro|embalaje|gastos","Texto: gastos asociados");
     Text("CARTA_ENCOMIENDA",@"carta\s+de\s+encomienda|\bencomienda\b","Texto: carta de encomienda");Text("CARTA_ENCOMIENDA",@"agente\s+aduanal|mandante","Texto: agente/mandante");Text("CARTA_ENCOMIENDA",@"art[ií]culo\s+(40|59)","Texto: referencia artículo 40/59");
     Text("MANIFESTACION_VALOR_MV_MVE",@"manifestaci[oó]n\s+de\s+valor|hoja\s+de\s+c[aá]lculo|\bMVE?\b","Texto: MV/MVE");Text("MANIFESTACION_VALOR_MV_MVE",@"valor\s+en\s+aduana|precio\s+pagado|m[eé]todo\s+de\s+valoraci[oó]n|incrementables?","Texto: conceptos de valoración");
+    Text("TRANSPORT_SERVICE_INVOICE",@"factura|invoice|cfdi","Texto: factura");Text("TRANSPORT_SERVICE_INVOICE",@"flete|freight|servicio\s+de\s+transporte","Texto: servicio de transporte");
+    Text("INSURANCE_POLICY",@"p[oó]liza|policy","Texto: póliza");Text("INSURANCE_POLICY",@"prima|asegurad[oa]|insured","Texto: cobertura de seguro");
+    Text("INSURANCE_INVOICE",@"factura|invoice|cfdi","Texto: factura");Text("INSURANCE_INVOICE",@"prima\s+de\s+seguro|insurance\s+premium","Texto: prima de seguro");
+    Text("INSURANCE_PAYMENT",@"comprobante\s+de\s+pago|payment\s+receipt","Texto: comprobante de pago");Text("INSURANCE_PAYMENT",@"seguro|insurance","Texto: seguro");
+    Text("INCREMENTABLE_INVOICE",@"factura|invoice|cfdi","Texto: factura");Text("INCREMENTABLE_INVOICE",@"incrementable|flete|seguro|embalaje","Texto: conceptos incrementables");
+    Text("INCREMENTABLE_PAYMENT",@"comprobante\s+de\s+pago|payment\s+receipt","Texto: comprobante de pago");Text("INCREMENTABLE_PAYMENT",@"incrementable|flete|embalaje","Texto: gasto incrementable");
     if(Regex.IsMatch(safeName,@"^CARTAS\d+$",RegexOptions.IgnoreCase)&&candidates.Count==0)return Result("OTHER",.45,["Nombre ambiguo CARTAS<número>"],"El nombre de carta es ambiguo; requiere selección manual.");
     if(candidates.Count>0){var best=candidates.OrderByDescending(x=>x.Value.Score).First();return Result(best.Key,best.Value.Score,best.Value.Evidence,best.Value.Evidence[0]);}
     return Result("OTHER",text.Length==0?.20:.30,text.Length==0?["PDF sin texto extraíble o nombre no concluyente"]:["Sin señales documentales suficientes"],"No se encontró una regla de clasificación confiable.");

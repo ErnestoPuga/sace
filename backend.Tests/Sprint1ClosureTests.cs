@@ -15,8 +15,8 @@ namespace Sace.Api.Tests;
 
 public class Sprint1MigrationTests {
   private const string PreviousMigration="20260917025444_NormativeEngineV1";
-  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1"];
-  private static readonly string[] ExpectedRules=["CROSS-INV-PED-INVOICE-001","CROSS-INV-PED-QTY-001","CROSS-INV-PED-UNIT-001","CROSS-INV-PED-VALUE-001","CROSS-INV-PED-CURRENCY-001","CROSS-INV-PED-INCOTERM-001","CROSS-INV-COVE-INVOICE-001","CROSS-INV-COVE-DESC-001","CROSS-INV-COVE-QTY-001","CROSS-INV-COVE-UNIT-001","CROSS-INV-COVE-VALUE-001","CROSS-INV-COVE-CURRENCY-001","CROSS-PL-PED-DESC-001","CROSS-PL-PED-QTY-001","CROSS-PL-PED-UNIT-001","CROSS-PL-PED-WEIGHT-001","CROSS-PL-TR-PACKAGES-001","CROSS-PL-TR-WEIGHT-001"];
+  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1","20261016222705_CustomsValuationEngineV1"];
+  private static readonly string[] ExpectedRules=["CROSS-INV-PED-INVOICE-001","CROSS-INV-PED-QTY-001","CROSS-INV-PED-UNIT-001","CROSS-INV-PED-VALUE-001","CROSS-INV-PED-CURRENCY-001","CROSS-INV-PED-INCOTERM-001","CROSS-INV-COVE-INVOICE-001","CROSS-INV-COVE-DESC-001","CROSS-INV-COVE-QTY-001","CROSS-INV-COVE-UNIT-001","CROSS-INV-COVE-VALUE-001","CROSS-INV-COVE-CURRENCY-001","CROSS-PL-PED-DESC-001","CROSS-PL-PED-QTY-001","CROSS-PL-PED-UNIT-001","CROSS-PL-PED-WEIGHT-001","CROSS-PL-TR-PACKAGES-001","CROSS-PL-TR-WEIGHT-001","CROSS-FREIGHT-INV-PED-001","CROSS-FREIGHT-PAY-INV-001","CROSS-FREIGHT-TR-INV-001","CROSS-INS-POL-PED-001","CROSS-INS-INV-PED-001","CROSS-INS-PAY-INV-001","CROSS-INC-INV-PED-001","CROSS-INC-PAY-INV-001","CROSS-VAL-MV-PED-001","CROSS-VAL-COMMERCIAL-001","CROSS-VAL-COVE-001"];
 
   [Fact]
   public async Task Empty_database_applies_all_migrations_with_new_constraints(){
@@ -28,6 +28,11 @@ public class Sprint1MigrationTests {
         Assert.Equal(1,await SchemaCount(db,"table","DocumentFields"));
         Assert.Equal(1,await SchemaCount(db,"table","CrossValidationRules"));
         Assert.Equal(1,await SchemaCount(db,"table","CrossValidationResults"));
+        Assert.Equal(1,await SchemaCount(db,"table","CustomsValuationCalculations"));
+        Assert.Equal(1,await SchemaCount(db,"table","CustomsValuationComponents"));
+        Assert.Equal(1,await SchemaCount(db,"table","ValuationComponentEvidence"));
+        Assert.Equal(1,await SchemaCount(db,"table","ContributionCalculations"));
+        Assert.Equal(1,await SchemaCount(db,"table","ContributionLines"));
         Assert.Equal(1,await SchemaCount(db,"index","IX_CrossValidationRules_Code_Version"));
         Assert.True(await ForeignKeyCount(db,"DocumentFields")>=1);
         Assert.True(await ForeignKeyCount(db,"CrossValidationResults")>=7);
@@ -65,8 +70,8 @@ public class Sprint1MigrationTests {
         Assert.True(await db.Audits.AnyAsync(x=>x.Id==auditId));
         Assert.Equal(LegalOutcome.COMPLIANT,(await db.AuditResults.SingleAsync(x=>x.Id==resultId)).Outcome);
         var rules=await db.CrossValidationRules.OrderBy(x=>x.Code).ToListAsync();
-        Assert.Equal(18,rules.Count);Assert.Equal(ExpectedRules.Order(),rules.Select(x=>x.Code));
-        Assert.Equal(18,rules.Select(x=>new{x.Code,x.Version}).Distinct().Count());
+        Assert.Equal(29,rules.Count);Assert.Equal(ExpectedRules.Order(),rules.Select(x=>x.Code));
+        Assert.Equal(29,rules.Select(x=>new{x.Code,x.Version}).Distinct().Count());
         Assert.All(rules,x=>Assert.Equal(MissingEvidenceBehavior.INSUFFICIENT_EVIDENCE,x.MissingEvidenceBehavior));
         Assert.All(rules.Where(x=>x.Code is "CROSS-PL-PED-WEIGHT-001" or "CROSS-PL-TR-WEIGHT-001"),x=>Assert.Equal(2m,x.PercentTolerance));
         await db.Database.GetService<IMigrator>().MigrateAsync(PreviousMigration);

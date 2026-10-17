@@ -151,6 +151,142 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("AuditResults");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AuditId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CalculatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditId");
+
+                    b.HasIndex("TradeOperationId");
+
+                    b.HasIndex("TradeOperationId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("ContributionCalculations");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ContributionLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CalculatedAmount")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ContributionCalculationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContributionCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("DeclaredAmount")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("DifferenceDeclaredVsCalculated")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("DifferenceDeclaredVsPaid")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("PaidAmount")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PaymentDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Rate")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawContributionCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawDescription")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("TaxBase")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContributionCalculationId");
+
+                    b.HasIndex("ContributionCode");
+
+                    b.HasIndex("PaymentDocumentId");
+
+                    b.HasIndex("SourceDocumentId");
+
+                    b.HasIndex("SourceFieldId");
+
+                    b.ToTable("ContributionLines");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.CrossValidationResult", b =>
                 {
                     b.Property<Guid>("Id")
@@ -324,6 +460,191 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("CrossValidationRules");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CustomsValuationCalculation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AbsoluteToleranceUsed")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AuditId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CalculatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CalculatedCustomsValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CalculationVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("DeclaredCustomsValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("DifferenceAmount")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("DifferencePercent")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ExchangeRate")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExchangeRateSource")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Formula")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("FreightTotal")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("IncrementablesTotal")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("InsuranceTotal")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsManualReviewRequired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("OtherIncrementablesTotal")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PackagingTotal")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PercentToleranceUsed")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("TransactionValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("TransactionValueConverted")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditId");
+
+                    b.HasIndex("TradeOperationId");
+
+                    b.HasIndex("TradeOperationId", "CalculationVersion")
+                        .IsUnique();
+
+                    b.ToTable("CustomsValuationCalculations");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CustomsValuationComponent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ComponentType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("ConvertedAmount")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomsValuationCalculationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EconomicKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceDescription")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ExchangeRate")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExchangeRateSource")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NormalizedAmount")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PrimaryDocumentFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PrimaryDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Treatment")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComponentType");
+
+                    b.HasIndex("CustomsValuationCalculationId");
+
+                    b.HasIndex("PrimaryDocumentFieldId");
+
+                    b.HasIndex("PrimaryDocumentId");
+
+                    b.HasIndex("CustomsValuationCalculationId", "EconomicKey")
+                        .IsUnique();
+
+                    b.ToTable("CustomsValuationComponents");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.CustomsValueAdjustment", b =>
@@ -946,6 +1267,42 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ValuationComponentEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DocumentFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceRole")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OperationDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ValuationComponentId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentFieldId");
+
+                    b.HasIndex("OperationDocumentId");
+
+                    b.HasIndex("ValuationComponentId");
+
+                    b.ToTable("ValuationComponentEvidence");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.Audit", b =>
                 {
                     b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
@@ -985,6 +1342,56 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("NormativeRule");
 
                     b.Navigation("ReviewerUser");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.Audit", "Audit")
+                        .WithMany()
+                        .HasForeignKey("AuditId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("ContributionCalculations")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Audit");
+
+                    b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ContributionLine", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ContributionCalculation", "ContributionCalculation")
+                        .WithMany("Lines")
+                        .HasForeignKey("ContributionCalculationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "PaymentDocument")
+                        .WithMany()
+                        .HasForeignKey("PaymentDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "SourceDocument")
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentField", "SourceField")
+                        .WithMany()
+                        .HasForeignKey("SourceFieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ContributionCalculation");
+
+                    b.Navigation("PaymentDocument");
+
+                    b.Navigation("SourceDocument");
+
+                    b.Navigation("SourceField");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.CrossValidationResult", b =>
@@ -1039,6 +1446,49 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("TargetField");
 
                     b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CustomsValuationCalculation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.Audit", "Audit")
+                        .WithMany()
+                        .HasForeignKey("AuditId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("ValuationCalculations")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Audit");
+
+                    b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CustomsValuationComponent", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.CustomsValuationCalculation", "CustomsValuationCalculation")
+                        .WithMany("Components")
+                        .HasForeignKey("CustomsValuationCalculationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.DocumentField", "PrimaryDocumentField")
+                        .WithMany()
+                        .HasForeignKey("PrimaryDocumentFieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "PrimaryDocument")
+                        .WithMany()
+                        .HasForeignKey("PrimaryDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CustomsValuationCalculation");
+
+                    b.Navigation("PrimaryDocument");
+
+                    b.Navigation("PrimaryDocumentField");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.CustomsValueAdjustment", b =>
@@ -1147,14 +1597,55 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ValuationComponentEvidence", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.DocumentField", "DocumentField")
+                        .WithMany()
+                        .HasForeignKey("DocumentFieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
+                        .WithMany()
+                        .HasForeignKey("OperationDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.CustomsValuationComponent", "ValuationComponent")
+                        .WithMany("Evidence")
+                        .HasForeignKey("ValuationComponentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocumentField");
+
+                    b.Navigation("OperationDocument");
+
+                    b.Navigation("ValuationComponent");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.Audit", b =>
                 {
                     b.Navigation("Results");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.CrossValidationRule", b =>
                 {
                     b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CustomsValuationCalculation", b =>
+                {
+                    b.Navigation("Components");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CustomsValuationComponent", b =>
+                {
+                    b.Navigation("Evidence");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.Finding", b =>
@@ -1175,11 +1666,15 @@ namespace Sace.Api.Infrastructure.Migrations
 
                     b.Navigation("Audits");
 
+                    b.Navigation("ContributionCalculations");
+
                     b.Navigation("CrossValidationResults");
 
                     b.Navigation("Documents");
 
                     b.Navigation("Findings");
+
+                    b.Navigation("ValuationCalculations");
                 });
 #pragma warning restore 612, 618
         }

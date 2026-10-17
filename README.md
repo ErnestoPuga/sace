@@ -12,6 +12,8 @@ Las reglas `DEMO-*` y controles `TECH-*` se conservan por compatibilidad, pero e
 
 SACE 2.0 añade un motor independiente de cruces documentales. Sus resultados `MATCH`, `MISMATCH` o de evidencia faltante no modifican resultados `LEGAL`. Véase [docs/CROSS_VALIDATION_ENGINE.md](docs/CROSS_VALIDATION_ENGINE.md).
 
+Sprint 2 incorpora valoración aduanera, agrupación de evidencia para prevenir doble conteo y conciliación técnica de contribuciones. Estos resultados también permanecen separados de LEGAL. Véase [docs/CUSTOMS_VALUATION_ENGINE.md](docs/CUSTOMS_VALUATION_ENGINE.md).
+
 ## Arquitectura
 
 - Monorepo con backend, frontend, pruebas, almacenamiento y documentación.
@@ -19,6 +21,7 @@ SACE 2.0 añade un motor independiente de cruces documentales. Sus resultados `M
 - Frontend: React, TypeScript, Vite, React Router, TailwindCSS, Axios, Recharts y Lucide.
 - Reglas DEMO/técnicas encapsuladas en `IAuditEngine`, motor normativo en `ILegalAuditEngine` y consolidación mensual en `IMonthlyAuditRule`.
 - Extracción de `DocumentField`, normalización y reglas versionadas de cruces encapsuladas en `IDocumentFieldExtractor`, `IFieldNormalizationService` e `ICrossValidationEngine`.
+- Valoración, conversión trazable y conciliación encapsuladas en `ICustomsValuationEngine`, `IMonetaryConversionService` e `IContributionReconciliationEngine`.
 - Procesadores futuros desacoplados mediante `IPedimentoParser`, `IXmlDocumentProcessor`, `IPdfDocumentProcessor` e `IExcelDocumentProcessor`.
 - Almacenamiento desacoplado mediante `IFileStorageService`; la implementación MVP es local y usa nombres físicos aleatorios.
 - Auditoría diaria programada mediante `DailyAuditWorker`, además de ejecución manual e inmediata al crear una operación.
@@ -69,7 +72,7 @@ Los registros documentales sembrados son metadata demo y no apuntan a PDFs físi
 
 La migración inicial está en `backend/Infrastructure/Migrations`.
 
-`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`, con índices y relaciones reversibles.
+`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. Ambas migraciones tienen índices, relaciones y `Down` acotados.
 
 ```powershell
 cd backend
@@ -169,6 +172,11 @@ SACE/
 - `POST /api/operations/{id}/document-fields/reextract`
 - `GET /api/operations/{id}/cross-validations`
 - `POST /api/operations/{id}/cross-validations/run`
+- `GET /api/operations/{id}/valuation`
+- `GET /api/operations/{id}/valuation/history`
+- `POST /api/operations/{id}/valuation/calculate`
+- `GET /api/operations/{id}/contributions`
+- `POST /api/operations/{id}/contributions/reconcile`
 - `GET|PATCH /api/operations/{operationId}/documents/{documentId}`
 - `GET /api/operations/{id}/requirements`
 - `POST /api/operations/{id}/audit`
@@ -213,7 +221,7 @@ npm run build --prefix frontend
 npm run lint --prefix frontend
 ```
 
-La suite cubre el flujo existente, el motor LEGAL, clasificación y extracción, normalización, cruces, seguridad, auditoría mensual y migración nueva/incremental/reversible.
+La suite cubre el flujo existente, el motor LEGAL, clasificación y extracción, normalización, cruces, valoración, deduplicación económica, monedas, contribuciones, seguridad, auditoría mensual y migraciones nuevas/incrementales/reversibles.
 
 ## Limitaciones actuales del MVP
 

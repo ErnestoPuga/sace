@@ -39,6 +39,13 @@ public static class DbSeeder {
       new TypeSeed("DECLARACION_INCREMENTABLES", "Declaración de incrementables", "Declaración documental de conceptos incrementables.", CorrectionResponsible.Company),
       new TypeSeed("CARTA_ENCOMIENDA", "Carta de encomienda / instrucciones al agente aduanal", "Instrucciones operativas aportadas al expediente.", CorrectionResponsible.Company),
       new TypeSeed("MANIFESTACION_VALOR_MV_MVE", "Hoja de cálculo / MV - MVE", "Manifestación de Valor u hoja de cálculo según la estructura realmente aportada.", CorrectionResponsible.Company),
+      new TypeSeed("TRANSPORT_SERVICE_INVOICE", "Factura de transporte / flete", "Factura por servicios de transporte o flete.", CorrectionResponsible.Company),
+      new TypeSeed("INSURANCE_POLICY", "Póliza de seguro", "Póliza aportada como evidencia de cobertura y prima atribuible.", CorrectionResponsible.Company),
+      new TypeSeed("INSURANCE_INVOICE", "Factura de seguro", "Factura por servicios o prima de seguro.", CorrectionResponsible.Company),
+      new TypeSeed("INSURANCE_PAYMENT", "Comprobante de pago de seguro", "Evidencia de pago relacionada con seguro.", CorrectionResponsible.Company),
+      new TypeSeed("INCREMENTABLE_INVOICE", "Factura de incrementables", "Factura de gastos potencialmente incrementables, sujeta a clasificación y revisión.", CorrectionResponsible.Company),
+      new TypeSeed("INCREMENTABLE_PAYMENT", "Comprobante de pago de incrementables", "Evidencia de pago relacionada con un gasto documentado.", CorrectionResponsible.Company),
+      new TypeSeed("PURCHASE_PAYMENT", "Comprobante de pago de mercancía", "Evidencia de pago de la mercancía.", CorrectionResponsible.Company),
       new TypeSeed("EDOCUMENT_ACK", "Acuse e-Document / VUCEM", "Acuse asociado técnicamente mediante referencia e-Document.", CorrectionResponsible.CustomsBroker),
       new TypeSeed("CUSTOMS_BROKER_INVOICE", "CFDI / Cuenta de gastos del agente aduanal", "CFDI o cuenta de gastos incorporada al expediente.", CorrectionResponsible.CustomsBroker),
       new TypeSeed("IMMEX_DOCUMENT", "Documento IMMEX", "Documento IMMEX capturado; no implica que la operación sea IMMEX.", CorrectionResponsible.Company),
@@ -103,7 +110,18 @@ public static class DbSeeder {
       Cross("CROSS-PL-PED-UNIT-001","Packing List ↔ pedimento: unidad","Cantidades","PACKING_LIST",DocumentFieldCodes.Unit,"PEDIMENTO",DocumentFieldCodes.Unit,CrossComparisonType.NORMALIZED_IDENTIFIER),
       Cross("CROSS-PL-PED-WEIGHT-001","Packing List ↔ pedimento: peso bruto","Transporte","PACKING_LIST",DocumentFieldCodes.GrossWeight,"PEDIMENTO",DocumentFieldCodes.GrossWeight,CrossComparisonType.PERCENT_TOLERANCE,percent:2m),
       Cross("CROSS-PL-TR-PACKAGES-001","Packing List ↔ transporte: bultos","Transporte","PACKING_LIST",DocumentFieldCodes.PackageCount,"TRANSPORT_DOCUMENT",DocumentFieldCodes.PackageCount,CrossComparisonType.EXACT_NUMERIC),
-      Cross("CROSS-PL-TR-WEIGHT-001","Packing List ↔ transporte: peso bruto","Transporte","PACKING_LIST",DocumentFieldCodes.GrossWeight,"TRANSPORT_DOCUMENT",DocumentFieldCodes.GrossWeight,CrossComparisonType.PERCENT_TOLERANCE,percent:2m)
+      Cross("CROSS-PL-TR-WEIGHT-001","Packing List ↔ transporte: peso bruto","Transporte","PACKING_LIST",DocumentFieldCodes.GrossWeight,"TRANSPORT_DOCUMENT",DocumentFieldCodes.GrossWeight,CrossComparisonType.PERCENT_TOLERANCE,percent:2m),
+      Cross("CROSS-FREIGHT-INV-PED-001","Factura de flete ↔ pedimento","Valoración","TRANSPORT_SERVICE_INVOICE",DocumentFieldCodes.FreightAmount,"PEDIMENTO",DocumentFieldCodes.DeclaredFreight,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-FREIGHT-PAY-INV-001","Pago de flete ↔ factura de flete","Valoración","INCREMENTABLE_PAYMENT",DocumentFieldCodes.PaymentAmount,"TRANSPORT_SERVICE_INVOICE",DocumentFieldCodes.FreightAmount,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-FREIGHT-TR-INV-001","Referencia transporte ↔ factura de flete","Valoración","TRANSPORT_DOCUMENT",DocumentFieldCodes.TransportReference,"TRANSPORT_SERVICE_INVOICE",DocumentFieldCodes.TransportReference,CrossComparisonType.NORMALIZED_IDENTIFIER),
+      Cross("CROSS-INS-POL-PED-001","Póliza de seguro ↔ pedimento","Valoración","INSURANCE_POLICY",DocumentFieldCodes.InsuranceAmount,"PEDIMENTO",DocumentFieldCodes.DeclaredInsurance,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-INS-INV-PED-001","Factura de seguro ↔ pedimento","Valoración","INSURANCE_INVOICE",DocumentFieldCodes.InsuranceAmount,"PEDIMENTO",DocumentFieldCodes.DeclaredInsurance,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-INS-PAY-INV-001","Pago de seguro ↔ factura de seguro","Valoración","INSURANCE_PAYMENT",DocumentFieldCodes.PaymentAmount,"INSURANCE_INVOICE",DocumentFieldCodes.InsuranceAmount,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-INC-INV-PED-001","Total factura incrementable ↔ pedimento","Valoración","INCREMENTABLE_INVOICE",DocumentFieldCodes.IncrementableTotal,"PEDIMENTO",DocumentFieldCodes.IncrementableTotal,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-INC-PAY-INV-001","Pago incrementable ↔ factura incrementable","Valoración","INCREMENTABLE_PAYMENT",DocumentFieldCodes.PaymentAmount,"INCREMENTABLE_INVOICE",DocumentFieldCodes.IncrementableTotal,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-VAL-MV-PED-001","MV/MVE ↔ valor en aduana declarado","Valoración","MANIFESTACION_VALOR_MV_MVE",DocumentFieldCodes.DeclaredCustomsValue,"PEDIMENTO",DocumentFieldCodes.DeclaredCustomsValue,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-VAL-COMMERCIAL-001","Factura comercial ↔ valor comercial declarado","Valoración","COMMERCIAL_INVOICE",DocumentFieldCodes.TotalAmount,"PEDIMENTO",DocumentFieldCodes.CommercialValue,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m),
+      Cross("CROSS-VAL-COVE-001","COVE ↔ valor comercial soportado","Valoración","COVE_ACK",DocumentFieldCodes.TotalAmount,"COMMERCIAL_INVOICE",DocumentFieldCodes.TotalAmount,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m)
     };
     var existingCross=await db.CrossValidationRules.Select(x=>new{x.Code,x.Version}).ToListAsync(); foreach(var item in crossRules.Where(x=>!existingCross.Any(e=>e.Code==x.Code&&e.Version==x.Version)))db.CrossValidationRules.Add(item); await db.SaveChangesAsync();
 

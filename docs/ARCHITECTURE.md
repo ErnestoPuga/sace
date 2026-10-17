@@ -36,3 +36,19 @@ LEGAL AuditResult
 `IPdfTextExtractor` aísla PdfPig; `IDocumentFieldExtractor` conserva el valor original y su procedencia; `IFieldNormalizationService` produce valores comparables; `ICrossValidationEngine` guarda resultados trazables. Los detalles, reglas y limitaciones están en [CROSS_VALIDATION_ENGINE.md](CROSS_VALIDATION_ENGINE.md).
 
 > Las reglas DEMO no constituyen una interpretación jurídica ni validación oficial de cumplimiento aduanero.
+
+## Valoración aduanera y contribuciones
+
+Sprint 2 extiende el flujo técnico después de los cruces documentales:
+
+```text
+Document processing → DocumentField → Cross Validation
+                                           ↓
+                                  Customs Valuation
+                                           ↓
+                              Contribution Reconciliation
+
+LEGAL AuditResult (independiente)
+```
+
+`CustomsValuationCalculation` conserva versiones, fórmula, tolerancias y snapshot. Sus `CustomsValuationComponent` representan conceptos económicos únicos y `ValuationComponentEvidence` agrupa evidencia primaria, soporte, pago y declaración sin multiplicar importes. `ContributionCalculation` y `ContributionLine` concilian importes técnicos conservando códigos desconocidos. Ninguno de estos resultados crea hallazgos ni modifica el motor LEGAL. Véase [CUSTOMS_VALUATION_ENGINE.md](CUSTOMS_VALUATION_ENGINE.md).

@@ -21,9 +21,15 @@ public enum ExtractionMethod { XML, PDF_TEXT, FILENAME, EXISTING_METADATA, MANUA
 public enum CrossComparisonType { EXACT_TEXT, NORMALIZED_TEXT, NORMALIZED_IDENTIFIER, EXACT_NUMERIC, NUMERIC_TOLERANCE, PERCENT_TOLERANCE, CURRENCY_AMOUNT, DATE, PRESENCE }
 public enum MissingEvidenceBehavior { INSUFFICIENT_EVIDENCE, MANUAL_REVIEW, NOT_APPLICABLE }
 public enum CrossValidationOutcome { MATCH, MISMATCH, INSUFFICIENT_EVIDENCE, MANUAL_REVIEW, NOT_APPLICABLE }
+public enum ValuationOutcome { MATCH, MISMATCH, INSUFFICIENT_EVIDENCE, MANUAL_REVIEW, NOT_APPLICABLE }
+public enum ValuationComponentType { TRANSACTION_VALUE, FREIGHT, INSURANCE, PACKAGING, OTHER_INCREMENTABLE, UNCLASSIFIED_INCREMENTABLE }
+public enum ValuationTreatment { ADD, SUBTRACT, INFORMATIONAL }
+public enum EvidenceRole { PRIMARY, SUPPORTING, PAYMENT, DECLARED_VALUE }
+public enum ContributionOutcome { CALCULATED, RECONCILED, MISMATCH, INSUFFICIENT_EVIDENCE, MANUAL_REVIEW, NOT_APPLICABLE }
 
 public static class DocumentFieldCodes {
   public const string PedimentoNumber="PEDIMENTO_NUMBER", OperationType="OPERATION_TYPE", EntryDate="ENTRY_DATE", Date="DATE", DocumentNumber="DOCUMENT_NUMBER", CustomsOffice="CUSTOMS_OFFICE", InvoiceNumber="INVOICE_NUMBER", CoveNumber="COVE_NUMBER", TariffFraction="TARIFF_FRACTION", Nico="NICO", Description="DESCRIPTION", Quantity="QUANTITY", Unit="UNIT", UnitPrice="UNIT_PRICE", CommercialValue="COMMERCIAL_VALUE", TotalAmount="TOTAL_AMOUNT", Currency="CURRENCY", Incoterm="INCOTERM", NetWeight="NET_WEIGHT", GrossWeight="GROSS_WEIGHT", PackageCount="PACKAGE_COUNT", OriginCountry="ORIGIN_COUNTRY", DestinationCountry="DESTINATION_COUNTRY", SupplierName="SUPPLIER_NAME", BuyerName="BUYER_NAME", TransportReference="TRANSPORT_REFERENCE", TransportMode="TRANSPORT_MODE", Origin="ORIGIN", Destination="DESTINATION", Carrier="CARRIER", ExchangeRate="EXCHANGE_RATE", DeclaredCustomsValue="DECLARED_CUSTOMS_VALUE";
+  public const string TransactionValue="TRANSACTION_VALUE", PricePaid="PRICE_PAID", PricePayable="PRICE_PAYABLE", FreightAmount="FREIGHT_AMOUNT", InsuranceAmount="INSURANCE_AMOUNT", PackagingAmount="PACKAGING_AMOUNT", OtherIncrementableAmount="OTHER_INCREMENTABLE_AMOUNT", IncrementableTotal="INCREMENTABLE_TOTAL", DeclaredFreight="DECLARED_FREIGHT", DeclaredInsurance="DECLARED_INSURANCE", DeclaredPackaging="DECLARED_PACKAGING", DeclaredOtherIncrementables="DECLARED_OTHER_INCREMENTABLES", CalculatedCustomsValue="CALCULATED_CUSTOMS_VALUE", PaymentAmount="PAYMENT_AMOUNT", PaymentDate="PAYMENT_DATE", PaymentReference="PAYMENT_REFERENCE", PaymentBeneficiary="PAYMENT_BENEFICIARY", ServiceProvider="SERVICE_PROVIDER", ServiceConcept="SERVICE_CONCEPT", OriginalCurrency="ORIGINAL_CURRENCY", ConvertedAmount="CONVERTED_AMOUNT", ContributionCode="CONTRIBUTION_CODE", ContributionBase="CONTRIBUTION_BASE", ContributionRate="CONTRIBUTION_RATE", ContributionDeclaredAmount="CONTRIBUTION_DECLARED_AMOUNT", ContributionCalculatedAmount="CONTRIBUTION_CALCULATED_AMOUNT", ContributionPaidAmount="CONTRIBUTION_PAID_AMOUNT", PolicyNumber="POLICY_NUMBER", ValidFrom="VALID_FROM", ValidTo="VALID_TO", InsuredName="INSURED_NAME", InsuredGoods="INSURED_GOODS", ValuationMethod="VALUATION_METHOD", Provider="PROVIDER";
 }
 
 public class User { public Guid Id { get; set; } = Guid.NewGuid(); public string Name { get; set; } = ""; public string Email { get; set; } = ""; public string PasswordHash { get; set; } = ""; public string Role { get; set; } = "Usuario"; public bool IsActive { get; set; } = true; public DateTime CreatedAt { get; set; } = DateTime.UtcNow; }
@@ -39,7 +45,7 @@ public class TradeOperation {
   public decimal? ExchangeRate { get; set; } public decimal? DeclaredCustomsValueMxn { get; set; } public string? Incoterm { get; set; }
   public string? Nico { get; set; } public string? GoodsDescription { get; set; }
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = []; public List<CrossValidationResult> CrossValidationResults { get; set; } = [];
+  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = []; public List<CrossValidationResult> CrossValidationResults { get; set; } = []; public List<CustomsValuationCalculation> ValuationCalculations { get; set; } = []; public List<ContributionCalculation> ContributionCalculations { get; set; } = [];
 }
 public class DocumentType { public Guid Id { get; set; } = Guid.NewGuid(); public string Code { get; set; } = ""; public string Name { get; set; } = ""; public string Description { get; set; } = ""; public CorrectionResponsible CorrectionResponsible { get; set; } public bool IsActive { get; set; } = true; }
 public class OperationDocument {
@@ -102,5 +108,31 @@ public class CrossValidationResult {
   public string Explanation { get; set; } = ""; public DateTime EvaluatedAt { get; set; } = DateTime.UtcNow;
   [System.ComponentModel.DataAnnotations.Schema.NotMapped] public ExtractionMethod? SourceExtractionMethod => SourceField?.ExtractionMethod;
   [System.ComponentModel.DataAnnotations.Schema.NotMapped] public ExtractionMethod? TargetExtractionMethod => TargetField?.ExtractionMethod ?? (TargetFieldId is null && TargetRawValue is not null ? ExtractionMethod.EXISTING_METADATA : null);
+}
+public class CustomsValuationCalculation {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!; public Guid? AuditId { get; set; } public Audit? Audit { get; set; }
+  public int CalculationVersion { get; set; } = 1; public decimal? TransactionValue { get; set; } public string? Currency { get; set; } public decimal? ExchangeRate { get; set; } public string? ExchangeRateSource { get; set; } public decimal? TransactionValueConverted { get; set; }
+  public decimal FreightTotal { get; set; } public decimal InsuranceTotal { get; set; } public decimal PackagingTotal { get; set; } public decimal OtherIncrementablesTotal { get; set; } public decimal IncrementablesTotal { get; set; }
+  public decimal? DeclaredCustomsValue { get; set; } public decimal? CalculatedCustomsValue { get; set; } public decimal? DifferenceAmount { get; set; } public decimal? DifferencePercent { get; set; }
+  public decimal AbsoluteToleranceUsed { get; set; } public decimal PercentToleranceUsed { get; set; } public ValuationOutcome Outcome { get; set; } public string Formula { get; set; } = ""; public string Explanation { get; set; } = ""; public string SnapshotJson { get; set; } = "{}"; public DateTime CalculatedAt { get; set; } = DateTime.UtcNow; public bool IsManualReviewRequired { get; set; }
+  public List<CustomsValuationComponent> Components { get; set; } = [];
+}
+public class CustomsValuationComponent {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid CustomsValuationCalculationId { get; set; } public CustomsValuationCalculation CustomsValuationCalculation { get; set; } = null!;
+  public ValuationComponentType ComponentType { get; set; } public string EconomicKey { get; set; } = ""; public Guid? PrimaryDocumentId { get; set; } public OperationDocument? PrimaryDocument { get; set; } public Guid? PrimaryDocumentFieldId { get; set; } public DocumentField? PrimaryDocumentField { get; set; }
+  public string? RawAmount { get; set; } public decimal? NormalizedAmount { get; set; } public string? Currency { get; set; } public decimal? ExchangeRate { get; set; } public string? ExchangeRateSource { get; set; } public decimal? ConvertedAmount { get; set; }
+  public ValuationTreatment Treatment { get; set; } = ValuationTreatment.ADD; public double? Confidence { get; set; } public string EvidenceDescription { get; set; } = ""; public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public List<ValuationComponentEvidence> Evidence { get; set; } = [];
+}
+public class ValuationComponentEvidence {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid ValuationComponentId { get; set; } public CustomsValuationComponent ValuationComponent { get; set; } = null!; public Guid OperationDocumentId { get; set; } public OperationDocument OperationDocument { get; set; } = null!; public Guid? DocumentFieldId { get; set; } public DocumentField? DocumentField { get; set; } public EvidenceRole EvidenceRole { get; set; } public double? Confidence { get; set; } public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+public class ContributionCalculation {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!; public Guid? AuditId { get; set; } public Audit? Audit { get; set; } public int Version { get; set; } = 1; public ContributionOutcome Status { get; set; } public DateTime CalculatedAt { get; set; } = DateTime.UtcNow; public string Explanation { get; set; } = ""; public string SnapshotJson { get; set; } = "{}"; public List<ContributionLine> Lines { get; set; } = [];
+}
+public class ContributionLine {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid ContributionCalculationId { get; set; } public ContributionCalculation ContributionCalculation { get; set; } = null!;
+  public string RawContributionCode { get; set; } = ""; public string? RawDescription { get; set; } public string? RawRate { get; set; } public string? RawAmount { get; set; } public string ContributionCode { get; set; } = ""; public string Description { get; set; } = "";
+  public decimal? TaxBase { get; set; } public decimal? Rate { get; set; } public decimal? DeclaredAmount { get; set; } public decimal? CalculatedAmount { get; set; } public decimal? PaidAmount { get; set; } public decimal? DifferenceDeclaredVsCalculated { get; set; } public decimal? DifferenceDeclaredVsPaid { get; set; } public string Currency { get; set; } = "MXN";
+  public ContributionOutcome Outcome { get; set; } public string Explanation { get; set; } = ""; public Guid? SourceDocumentId { get; set; } public OperationDocument? SourceDocument { get; set; } public Guid? SourceFieldId { get; set; } public DocumentField? SourceField { get; set; } public Guid? PaymentDocumentId { get; set; } public OperationDocument? PaymentDocument { get; set; }
 }
 public class SystemAuditLog { public Guid Id { get; set; } = Guid.NewGuid(); public Guid? UserId { get; set; } public User? User { get; set; } public string Action { get; set; } = ""; public string EntityType { get; set; } = ""; public string EntityId { get; set; } = ""; public string Details { get; set; } = ""; public DateTime Timestamp { get; set; } = DateTime.UtcNow; }
