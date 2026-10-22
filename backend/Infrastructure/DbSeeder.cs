@@ -51,7 +51,15 @@ public static class DbSeeder {
       new TypeSeed("IMMEX_DOCUMENT", "Documento IMMEX", "Documento IMMEX capturado; no implica que la operación sea IMMEX.", CorrectionResponsible.Company),
       new TypeSeed("OTHER", "Otro documento", "Documento sin clasificación automática confiable.", CorrectionResponsible.Company),
       new TypeSeed("ORIGIN_CERT", "Certificado de origen", "Certificado usado por la regla exclusivamente DEMO de trato preferencial.", CorrectionResponsible.Company),
-      new TypeSeed("IMMEX_DOC", "Documento IMMEX demo", "Tipo legado conservado para la regla DEMO IMMEX.", CorrectionResponsible.Company)
+      new TypeSeed("IMMEX_DOC", "Documento IMMEX demo", "Tipo legado conservado para la regla DEMO IMMEX.", CorrectionResponsible.Company),
+      new TypeSeed("NOM_EVIDENCE", "Evidencia NOM", "Evidencia documental regulatoria; su clasificación no acredita cumplimiento.", CorrectionResponsible.Company),
+      new TypeSeed("PERMISO_PREVIO", "Permiso previo", "Documento clasificado como permiso previo; sujeto a revisión.", CorrectionResponsible.Company),
+      new TypeSeed("AVISO_AUTOMATICO", "Aviso automático", "Documento clasificado como aviso automático; sujeto a revisión.", CorrectionResponsible.Company),
+      new TypeSeed("COFEPRIS_DOCUMENT", "Documento COFEPRIS", "Evidencia documental asociada a COFEPRIS; sujeto a revisión.", CorrectionResponsible.Company),
+      new TypeSeed("SEMARNAT_DOCUMENT", "Documento SEMARNAT", "Evidencia documental asociada a SEMARNAT; sujeto a revisión.", CorrectionResponsible.Company),
+      new TypeSeed("SEDENA_DOCUMENT", "Documento SEDENA", "Evidencia documental asociada a SEDENA; sujeto a revisión.", CorrectionResponsible.Company),
+      new TypeSeed("FITOSANITARIO_CERTIFICATE", "Certificado fitosanitario", "Evidencia documental fitosanitaria; sujeto a revisión.", CorrectionResponsible.Company),
+      new TypeSeed("RRNA_OTHER", "Otro documento RRNA", "Otra evidencia documental regulatoria pendiente de revisión.", CorrectionResponsible.Company)
     };
     var existingCodes = await db.DocumentTypes.Select(x => x.Code).ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
     foreach (var item in definitions.Where(x => !existingCodes.Contains(x.Code))) db.DocumentTypes.Add(new DocumentType { Code = item.Code, Name = item.Name, Description = item.Description, CorrectionResponsible = item.Responsible });
@@ -124,6 +132,14 @@ public static class DbSeeder {
       Cross("CROSS-VAL-COVE-001","COVE ↔ valor comercial soportado","Valoración","COVE_ACK",DocumentFieldCodes.TotalAmount,"COMMERCIAL_INVOICE",DocumentFieldCodes.TotalAmount,CrossComparisonType.CURRENCY_AMOUNT,absolute:.01m)
     };
     var existingCross=await db.CrossValidationRules.Select(x=>new{x.Code,x.Version}).ToListAsync(); foreach(var item in crossRules.Where(x=>!existingCross.Any(e=>e.Code==x.Code&&e.Version==x.Version)))db.CrossValidationRules.Add(item); await db.SaveChangesAsync();
+
+    var regulatorySeeds = new[] {
+      new RegulatoryRequirement { Code="DEMO-RRNA-PERMISO-001",Version=1,Name="Permiso previo demostrativo",Description="Escenario sintético DRAFT para validar el motor; no representa una regulación real.",RequirementCategory=RequirementCategory.PERMISO_PREVIO,AuthorityCode=RegulatoryAuthorityCode.ECONOMIA,OperationScope=RegulatoryOperationScope.IMPORT,EffectiveFrom=effective,Status=RegulatoryRequirementStatus.DRAFT,IsAutomatable=true,Conditions=[new(){FieldCode=DocumentFieldCodes.TariffFraction,Operator=RegulatoryConditionOperator.EQUALS,ExpectedValue="00000001",ConditionGroup="A",Sequence=1}],EvidenceRequirements=[new(){DocumentTypeCode="PERMISO_PREVIO",EvidenceRole=RegulatoryEvidenceRole.PRIMARY,IsRequired=true,Description="Evidencia sintética esperada."}] },
+      new RegulatoryRequirement { Code="DEMO-RRNA-NOM-001",Version=1,Name="Evidencia NOM demostrativa",Description="Escenario sintético DRAFT para revisión manual; no representa una regulación real.",RequirementCategory=RequirementCategory.NOM,AuthorityCode=RegulatoryAuthorityCode.ECONOMIA,OperationScope=RegulatoryOperationScope.BOTH,EffectiveFrom=effective,Status=RegulatoryRequirementStatus.DRAFT,IsAutomatable=false,RequiresManualReview=true,Conditions=[new(){FieldCode=DocumentFieldCodes.Description,Operator=RegulatoryConditionOperator.PRESENT,ConditionGroup="A",Sequence=1}],EvidenceRequirements=[new(){DocumentTypeCode="NOM_EVIDENCE",EvidenceRole=RegulatoryEvidenceRole.PRIMARY,IsRequired=true,Description="Evidencia sintética esperada."}] }
+    };
+    var existingRegulatory=await db.RegulatoryRequirements.Select(x=>new{x.Code,x.Version}).ToListAsync();
+    foreach(var item in regulatorySeeds.Where(x=>!existingRegulatory.Any(e=>e.Code==x.Code&&e.Version==x.Version)))db.RegulatoryRequirements.Add(item);
+    await db.SaveChangesAsync();
 
     if (!configuration.GetValue<bool>("Seed:DemoData")) return;
     var admin = await db.Users.FirstOrDefaultAsync(x => x.Email == "admin@sace.local");

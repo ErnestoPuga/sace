@@ -26,6 +26,15 @@ public enum ValuationComponentType { TRANSACTION_VALUE, FREIGHT, INSURANCE, PACK
 public enum ValuationTreatment { ADD, SUBTRACT, INFORMATIONAL }
 public enum EvidenceRole { PRIMARY, SUPPORTING, PAYMENT, DECLARED_VALUE }
 public enum ContributionOutcome { CALCULATED, RECONCILED, MISMATCH, INSUFFICIENT_EVIDENCE, MANUAL_REVIEW, NOT_APPLICABLE }
+public enum RegulatoryRequirementStatus { DRAFT, VERIFIED, RETIRED }
+public enum RequirementCategory { NOM, PERMISO_PREVIO, AVISO_AUTOMATICO, COFEPRIS, SEMARNAT, SEDENA, FITOSANITARIO, OTHER }
+public enum RegulatoryAuthorityCode { ECONOMIA, SALUD_COFEPRIS, SEMARNAT, SEDENA, AGRICULTURA_SENASICA, OTHER }
+public enum RegulatoryOperationScope { IMPORT, EXPORT, BOTH }
+public enum RegulatoryConditionOperator { EQUALS, NOT_EQUALS, IN, NOT_IN, PREFIX, NUMERIC_RANGE, PRESENT, NOT_PRESENT, CONTAINS_NORMALIZED }
+public enum RegulatoryApplicabilityOutcome { APPLIES, DOES_NOT_APPLY, INSUFFICIENT_DATA, MANUAL_REVIEW }
+public enum RegulatoryEvidenceStatus { COMPLETE, PARTIAL, MISSING_EVIDENCE, INSUFFICIENT_DATA, MANUAL_REVIEW, NOT_REQUIRED }
+public enum RegulatoryEvidenceRole { PRIMARY, ALTERNATIVE, SUPPORTING }
+public enum RegulatoryManualOutcome { CONFIRMED_APPLIES, CONFIRMED_DOES_NOT_APPLY, EVIDENCE_ACCEPTED, EVIDENCE_REJECTED, NEEDS_MORE_INFORMATION }
 
 public static class DocumentFieldCodes {
   public const string PedimentoNumber="PEDIMENTO_NUMBER", OperationType="OPERATION_TYPE", EntryDate="ENTRY_DATE", Date="DATE", DocumentNumber="DOCUMENT_NUMBER", CustomsOffice="CUSTOMS_OFFICE", InvoiceNumber="INVOICE_NUMBER", CoveNumber="COVE_NUMBER", TariffFraction="TARIFF_FRACTION", Nico="NICO", Description="DESCRIPTION", Quantity="QUANTITY", Unit="UNIT", UnitPrice="UNIT_PRICE", CommercialValue="COMMERCIAL_VALUE", TotalAmount="TOTAL_AMOUNT", Currency="CURRENCY", Incoterm="INCOTERM", NetWeight="NET_WEIGHT", GrossWeight="GROSS_WEIGHT", PackageCount="PACKAGE_COUNT", OriginCountry="ORIGIN_COUNTRY", DestinationCountry="DESTINATION_COUNTRY", SupplierName="SUPPLIER_NAME", BuyerName="BUYER_NAME", TransportReference="TRANSPORT_REFERENCE", TransportMode="TRANSPORT_MODE", Origin="ORIGIN", Destination="DESTINATION", Carrier="CARRIER", ExchangeRate="EXCHANGE_RATE", DeclaredCustomsValue="DECLARED_CUSTOMS_VALUE";
@@ -45,7 +54,7 @@ public class TradeOperation {
   public decimal? ExchangeRate { get; set; } public decimal? DeclaredCustomsValueMxn { get; set; } public string? Incoterm { get; set; }
   public string? Nico { get; set; } public string? GoodsDescription { get; set; }
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = []; public List<CrossValidationResult> CrossValidationResults { get; set; } = []; public List<CustomsValuationCalculation> ValuationCalculations { get; set; } = []; public List<ContributionCalculation> ContributionCalculations { get; set; } = [];
+  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = []; public List<CrossValidationResult> CrossValidationResults { get; set; } = []; public List<CustomsValuationCalculation> ValuationCalculations { get; set; } = []; public List<ContributionCalculation> ContributionCalculations { get; set; } = []; public List<RegulatoryRequirementEvaluation> RegulatoryEvaluations { get; set; } = [];
 }
 public class DocumentType { public Guid Id { get; set; } = Guid.NewGuid(); public string Code { get; set; } = ""; public string Name { get; set; } = ""; public string Description { get; set; } = ""; public CorrectionResponsible CorrectionResponsible { get; set; } public bool IsActive { get; set; } = true; }
 public class OperationDocument {
@@ -134,5 +143,36 @@ public class ContributionLine {
   public string RawContributionCode { get; set; } = ""; public string? RawDescription { get; set; } public string? RawRate { get; set; } public string? RawAmount { get; set; } public string ContributionCode { get; set; } = ""; public string Description { get; set; } = "";
   public decimal? TaxBase { get; set; } public decimal? Rate { get; set; } public decimal? DeclaredAmount { get; set; } public decimal? CalculatedAmount { get; set; } public decimal? PaidAmount { get; set; } public decimal? DifferenceDeclaredVsCalculated { get; set; } public decimal? DifferenceDeclaredVsPaid { get; set; } public string Currency { get; set; } = "MXN";
   public ContributionOutcome Outcome { get; set; } public string Explanation { get; set; } = ""; public Guid? SourceDocumentId { get; set; } public OperationDocument? SourceDocument { get; set; } public Guid? SourceFieldId { get; set; } public DocumentField? SourceField { get; set; } public Guid? PaymentDocumentId { get; set; } public OperationDocument? PaymentDocument { get; set; }
+}
+public class RegulatoryRequirement {
+  public Guid Id { get; set; } = Guid.NewGuid(); public string Code { get; set; } = ""; public int Version { get; set; } = 1; public string Name { get; set; } = ""; public string? Description { get; set; }
+  public RequirementCategory RequirementCategory { get; set; } public RegulatoryAuthorityCode? AuthorityCode { get; set; } public string? AuthorityName { get; set; } public RegulatoryOperationScope OperationScope { get; set; } = RegulatoryOperationScope.BOTH;
+  public string? LegalBasis { get; set; } public string? OfficialSourceUrl { get; set; } public DateTime? PublicationDate { get; set; } public DateTime? EffectiveFrom { get; set; } public DateTime? EffectiveTo { get; set; }
+  public RegulatoryRequirementStatus Status { get; set; } = RegulatoryRequirementStatus.DRAFT; public bool IsAutomatable { get; set; } = true; public bool RequiresManualReview { get; set; }
+  public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+  public List<RegulatoryRequirementCondition> Conditions { get; set; } = []; public List<RegulatoryEvidenceRequirement> EvidenceRequirements { get; set; } = []; public List<RegulatoryRequirementEvaluation> Evaluations { get; set; } = [];
+}
+public class RegulatoryRequirementCondition {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid RegulatoryRequirementId { get; set; } public RegulatoryRequirement RegulatoryRequirement { get; set; } = null!;
+  public string FieldCode { get; set; } = ""; public RegulatoryConditionOperator Operator { get; set; } public string? ExpectedValue { get; set; } public string? ExpectedValue2 { get; set; }
+  public string ConditionGroup { get; set; } = "DEFAULT"; public int Sequence { get; set; } = 1;
+}
+public class RegulatoryEvidenceRequirement {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid RegulatoryRequirementId { get; set; } public RegulatoryRequirement RegulatoryRequirement { get; set; } = null!;
+  public string DocumentTypeCode { get; set; } = ""; public RegulatoryEvidenceRole EvidenceRole { get; set; } = RegulatoryEvidenceRole.PRIMARY; public bool IsRequired { get; set; } = true; public string? Description { get; set; } public string? AlternativeGroup { get; set; }
+}
+public class RegulatoryRequirementEvaluation {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!; public Guid? AuditId { get; set; } public Audit? Audit { get; set; }
+  public Guid RegulatoryRequirementId { get; set; } public RegulatoryRequirement RegulatoryRequirement { get; set; } = null!; public string RequirementCode { get; set; } = ""; public int RequirementVersion { get; set; }
+  public DateTime EvaluationDate { get; set; } public RegulatoryApplicabilityOutcome AutomatedOutcome { get; set; } public RegulatoryEvidenceStatus EvidenceStatus { get; set; } public string Explanation { get; set; } = ""; public double? Confidence { get; set; }
+  public bool ManualReviewRequired { get; set; } public DateTime EvaluatedAt { get; set; } = DateTime.UtcNow; public string SnapshotJson { get; set; } = "{}";
+  public RegulatoryManualOutcome? ManualOutcome { get; set; } public string? ManualNote { get; set; } public Guid? ReviewedBy { get; set; } public User? Reviewer { get; set; } public DateTime? ReviewedAt { get; set; }
+  public List<RegulatoryRequirementEvaluationEvidence> Evidence { get; set; } = [];
+}
+public class RegulatoryRequirementEvaluationEvidence {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid RegulatoryRequirementEvaluationId { get; set; } public RegulatoryRequirementEvaluation RegulatoryRequirementEvaluation { get; set; } = null!;
+  public Guid? RegulatoryEvidenceRequirementId { get; set; } public RegulatoryEvidenceRequirement? RegulatoryEvidenceRequirement { get; set; }
+  public Guid? OperationDocumentId { get; set; } public OperationDocument? OperationDocument { get; set; } public string DocumentTypeCode { get; set; } = ""; public RegulatoryEvidenceRole EvidenceRole { get; set; }
+  public bool IsRequired { get; set; } public bool IsPresent { get; set; } public string? AlternativeGroup { get; set; } public string? Notes { get; set; }
 }
 public class SystemAuditLog { public Guid Id { get; set; } = Guid.NewGuid(); public Guid? UserId { get; set; } public User? User { get; set; } public string Action { get; set; } = ""; public string EntityType { get; set; } = ""; public string EntityId { get; set; } = ""; public string Details { get; set; } = ""; public DateTime Timestamp { get; set; } = DateTime.UtcNow; }

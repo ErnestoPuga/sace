@@ -15,7 +15,7 @@ namespace Sace.Api.Tests;
 
 public class Sprint1MigrationTests {
   private const string PreviousMigration="20260917025444_NormativeEngineV1";
-  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1","20261016222705_CustomsValuationEngineV1"];
+  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1","20261016222705_CustomsValuationEngineV1","20261019183747_RegulatoryRequirementsEngineV1"];
   private static readonly string[] ExpectedRules=["CROSS-INV-PED-INVOICE-001","CROSS-INV-PED-QTY-001","CROSS-INV-PED-UNIT-001","CROSS-INV-PED-VALUE-001","CROSS-INV-PED-CURRENCY-001","CROSS-INV-PED-INCOTERM-001","CROSS-INV-COVE-INVOICE-001","CROSS-INV-COVE-DESC-001","CROSS-INV-COVE-QTY-001","CROSS-INV-COVE-UNIT-001","CROSS-INV-COVE-VALUE-001","CROSS-INV-COVE-CURRENCY-001","CROSS-PL-PED-DESC-001","CROSS-PL-PED-QTY-001","CROSS-PL-PED-UNIT-001","CROSS-PL-PED-WEIGHT-001","CROSS-PL-TR-PACKAGES-001","CROSS-PL-TR-WEIGHT-001","CROSS-FREIGHT-INV-PED-001","CROSS-FREIGHT-PAY-INV-001","CROSS-FREIGHT-TR-INV-001","CROSS-INS-POL-PED-001","CROSS-INS-INV-PED-001","CROSS-INS-PAY-INV-001","CROSS-INC-INV-PED-001","CROSS-INC-PAY-INV-001","CROSS-VAL-MV-PED-001","CROSS-VAL-COMMERCIAL-001","CROSS-VAL-COVE-001"];
 
   [Fact]
@@ -33,6 +33,11 @@ public class Sprint1MigrationTests {
         Assert.Equal(1,await SchemaCount(db,"table","ValuationComponentEvidence"));
         Assert.Equal(1,await SchemaCount(db,"table","ContributionCalculations"));
         Assert.Equal(1,await SchemaCount(db,"table","ContributionLines"));
+        Assert.Equal(1,await SchemaCount(db,"table","RegulatoryRequirements"));
+        Assert.Equal(1,await SchemaCount(db,"table","RegulatoryRequirementConditions"));
+        Assert.Equal(1,await SchemaCount(db,"table","RegulatoryEvidenceRequirements"));
+        Assert.Equal(1,await SchemaCount(db,"table","RegulatoryRequirementEvaluations"));
+        Assert.Equal(1,await SchemaCount(db,"table","RegulatoryRequirementEvaluationEvidence"));
         Assert.Equal(1,await SchemaCount(db,"index","IX_CrossValidationRules_Code_Version"));
         Assert.True(await ForeignKeyCount(db,"DocumentFields")>=1);
         Assert.True(await ForeignKeyCount(db,"CrossValidationResults")>=7);
@@ -74,6 +79,8 @@ public class Sprint1MigrationTests {
         Assert.Equal(29,rules.Select(x=>new{x.Code,x.Version}).Distinct().Count());
         Assert.All(rules,x=>Assert.Equal(MissingEvidenceBehavior.INSUFFICIENT_EVIDENCE,x.MissingEvidenceBehavior));
         Assert.All(rules.Where(x=>x.Code is "CROSS-PL-PED-WEIGHT-001" or "CROSS-PL-TR-WEIGHT-001"),x=>Assert.Equal(2m,x.PercentTolerance));
+        Assert.Equal(2,await db.RegulatoryRequirements.CountAsync());Assert.All(await db.RegulatoryRequirements.ToListAsync(),x=>Assert.Equal(RegulatoryRequirementStatus.DRAFT,x.Status));
+        Assert.Equal(8,await db.DocumentTypes.CountAsync(x=>new[]{"NOM_EVIDENCE","PERMISO_PREVIO","AVISO_AUTOMATICO","COFEPRIS_DOCUMENT","SEMARNAT_DOCUMENT","SEDENA_DOCUMENT","FITOSANITARIO_CERTIFICATE","RRNA_OTHER"}.Contains(x.Code)));
         await db.Database.GetService<IMigrator>().MigrateAsync(PreviousMigration);
         Assert.Equal(0,await SchemaCount(db,"table","DocumentFields"));
         Assert.Equal(0,await SchemaCount(db,"table","CrossValidationRules"));

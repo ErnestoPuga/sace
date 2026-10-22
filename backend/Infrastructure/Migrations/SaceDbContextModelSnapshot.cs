@@ -1085,6 +1085,274 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("OperationDocuments");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryEvidenceRequirement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AlternativeGroup")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceRole")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("RegulatoryRequirementId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegulatoryRequirementId");
+
+                    b.ToTable("RegulatoryEvidenceRequirements");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AuthorityCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AuthorityName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsAutomatable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LegalBasis")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OfficialSourceUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OperationScope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PublicationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequirementCategory")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RequiresManualReview")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code", "Version")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "EffectiveFrom", "EffectiveTo");
+
+                    b.ToTable("RegulatoryRequirements");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementCondition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConditionGroup")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExpectedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExpectedValue2")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operator")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RegulatoryRequirementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegulatoryRequirementId", "ConditionGroup", "Sequence");
+
+                    b.ToTable("RegulatoryRequirementConditions");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementEvaluation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AuditId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AutomatedOutcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("EvaluatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EvaluationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ManualNote")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ManualOutcome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ManualReviewRequired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("RegulatoryRequirementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequirementCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RequirementVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditId");
+
+                    b.HasIndex("RegulatoryRequirementId");
+
+                    b.HasIndex("ReviewedBy");
+
+                    b.HasIndex("TradeOperationId");
+
+                    b.HasIndex("TradeOperationId", "RequirementCode", "EvaluatedAt");
+
+                    b.ToTable("RegulatoryRequirementEvaluations");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementEvaluationEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AlternativeGroup")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceRole")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPresent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OperationDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("RegulatoryEvidenceRequirementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RegulatoryRequirementEvaluationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationDocumentId");
+
+                    b.HasIndex("RegulatoryEvidenceRequirementId");
+
+                    b.HasIndex("RegulatoryRequirementEvaluationId");
+
+                    b.ToTable("RegulatoryRequirementEvaluationEvidence");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.SystemAuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1588,6 +1856,86 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("TradeOperation");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryEvidenceRequirement", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.RegulatoryRequirement", "RegulatoryRequirement")
+                        .WithMany("EvidenceRequirements")
+                        .HasForeignKey("RegulatoryRequirementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RegulatoryRequirement");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementCondition", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.RegulatoryRequirement", "RegulatoryRequirement")
+                        .WithMany("Conditions")
+                        .HasForeignKey("RegulatoryRequirementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RegulatoryRequirement");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementEvaluation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.Audit", "Audit")
+                        .WithMany()
+                        .HasForeignKey("AuditId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.RegulatoryRequirement", "RegulatoryRequirement")
+                        .WithMany("Evaluations")
+                        .HasForeignKey("RegulatoryRequirementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.User", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("RegulatoryEvaluations")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Audit");
+
+                    b.Navigation("RegulatoryRequirement");
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementEvaluationEvidence", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
+                        .WithMany()
+                        .HasForeignKey("OperationDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.RegulatoryEvidenceRequirement", "RegulatoryEvidenceRequirement")
+                        .WithMany()
+                        .HasForeignKey("RegulatoryEvidenceRequirementId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.RegulatoryRequirementEvaluation", "RegulatoryRequirementEvaluation")
+                        .WithMany("Evidence")
+                        .HasForeignKey("RegulatoryRequirementEvaluationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OperationDocument");
+
+                    b.Navigation("RegulatoryEvidenceRequirement");
+
+                    b.Navigation("RegulatoryRequirementEvaluation");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.SystemAuditLog", b =>
                 {
                     b.HasOne("Sace.Api.Domain.User", "User")
@@ -1660,6 +2008,20 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("References");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirement", b =>
+                {
+                    b.Navigation("Conditions");
+
+                    b.Navigation("Evaluations");
+
+                    b.Navigation("EvidenceRequirements");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementEvaluation", b =>
+                {
+                    b.Navigation("Evidence");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.TradeOperation", b =>
                 {
                     b.Navigation("Adjustments");
@@ -1673,6 +2035,8 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("Findings");
+
+                    b.Navigation("RegulatoryEvaluations");
 
                     b.Navigation("ValuationCalculations");
                 });

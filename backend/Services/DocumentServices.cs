@@ -132,7 +132,14 @@ public sealed class DocumentClassifier(IXmlDocumentProcessor xml, IPdfTextExtrac
     (new(@"(?:PAGO|PAYMENT).*SEGURO|INSURANCE.*(?:PAGO|PAYMENT)", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INSURANCE_PAYMENT", .90, "Nombre de pago de seguro"),
     (new(@"(?:FACTURA|INVOICE).*INCREMENTABLE", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INCREMENTABLE_INVOICE", .90, "Nombre de factura de incrementables"),
     (new(@"(?:PAGO|PAYMENT).*INCREMENTABLE", RegexOptions.IgnoreCase | RegexOptions.Compiled), "INCREMENTABLE_PAYMENT", .90, "Nombre de pago de incrementables"),
-    (new(@"(?:PAGO|PAYMENT).*(?:COMPRA|MERCANC[IÍ]A)|PURCHASE.*PAYMENT", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PURCHASE_PAYMENT", .90, "Nombre de pago de mercancía")
+    (new(@"(?:PAGO|PAYMENT).*(?:COMPRA|MERCANC[IÍ]A)|PURCHASE.*PAYMENT", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PURCHASE_PAYMENT", .90, "Nombre de pago de mercancía"),
+    (new(@"(?:PERMISO[_\- ]?PREVIO|PREVIOUS[_\- ]?PERMIT)", RegexOptions.IgnoreCase | RegexOptions.Compiled), "PERMISO_PREVIO", .88, "Nombre con señal de permiso previo"),
+    (new(@"AVISO[_\- ]?AUTOM[AÁ]TICO", RegexOptions.IgnoreCase | RegexOptions.Compiled), "AVISO_AUTOMATICO", .88, "Nombre con señal de aviso automático"),
+    (new(@"COFEPRIS", RegexOptions.IgnoreCase | RegexOptions.Compiled), "COFEPRIS_DOCUMENT", .88, "Nombre con señal COFEPRIS"),
+    (new(@"SEMARNAT", RegexOptions.IgnoreCase | RegexOptions.Compiled), "SEMARNAT_DOCUMENT", .88, "Nombre con señal SEMARNAT"),
+    (new(@"SEDENA", RegexOptions.IgnoreCase | RegexOptions.Compiled), "SEDENA_DOCUMENT", .88, "Nombre con señal SEDENA"),
+    (new(@"(?:CERTIFICADO[_\- ]?)?FITOSANITARIO", RegexOptions.IgnoreCase | RegexOptions.Compiled), "FITOSANITARIO_CERTIFICATE", .88, "Nombre con señal fitosanitaria"),
+    (new(@"(?:EVIDENCIA[_\- ]?)?NOM(?:[_\- ]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled), "NOM_EVIDENCE", .86, "Nombre con señal de evidencia NOM")
   ];
   public async Task<DocumentClassification> ClassifyAsync(IFormFile file, CancellationToken ct) {
     var safeName = Path.GetFileNameWithoutExtension(file.FileName);
@@ -161,6 +168,9 @@ public sealed class DocumentClassifier(IXmlDocumentProcessor xml, IPdfTextExtrac
     Text("INSURANCE_PAYMENT",@"comprobante\s+de\s+pago|payment\s+receipt","Texto: comprobante de pago");Text("INSURANCE_PAYMENT",@"seguro|insurance","Texto: seguro");
     Text("INCREMENTABLE_INVOICE",@"factura|invoice|cfdi","Texto: factura");Text("INCREMENTABLE_INVOICE",@"incrementable|flete|seguro|embalaje","Texto: conceptos incrementables");
     Text("INCREMENTABLE_PAYMENT",@"comprobante\s+de\s+pago|payment\s+receipt","Texto: comprobante de pago");Text("INCREMENTABLE_PAYMENT",@"incrementable|flete|embalaje","Texto: gasto incrementable");
+    Text("PERMISO_PREVIO",@"permiso\s+previo","Texto: permiso previo"); Text("AVISO_AUTOMATICO",@"aviso\s+autom[aá]tico","Texto: aviso automático");
+    Text("COFEPRIS_DOCUMENT",@"\bCOFEPRIS\b","Texto: señal COFEPRIS"); Text("SEMARNAT_DOCUMENT",@"\bSEMARNAT\b","Texto: señal SEMARNAT"); Text("SEDENA_DOCUMENT",@"\bSEDENA\b","Texto: señal SEDENA");
+    Text("FITOSANITARIO_CERTIFICATE",@"certificado\s+fitosanitario|fitosanitari[oa]","Texto: señal fitosanitaria"); Text("NOM_EVIDENCE",@"norma\s+oficial\s+mexicana|\bNOM[-\s]\d","Texto: señal NOM");
     if(Regex.IsMatch(safeName,@"^CARTAS\d+$",RegexOptions.IgnoreCase)&&candidates.Count==0)return Result("OTHER",.45,["Nombre ambiguo CARTAS<número>"],"El nombre de carta es ambiguo; requiere selección manual.");
     if(candidates.Count>0){var best=candidates.OrderByDescending(x=>x.Value.Score).First();return Result(best.Key,best.Value.Score,best.Value.Evidence,best.Value.Evidence[0]);}
     return Result("OTHER",text.Length==0?.20:.30,text.Length==0?["PDF sin texto extraíble o nombre no concluyente"]:["Sin señales documentales suficientes"],"No se encontró una regla de clasificación confiable.");

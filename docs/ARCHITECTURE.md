@@ -52,3 +52,19 @@ LEGAL AuditResult (independiente)
 ```
 
 `CustomsValuationCalculation` conserva versiones, fórmula, tolerancias y snapshot. Sus `CustomsValuationComponent` representan conceptos económicos únicos y `ValuationComponentEvidence` agrupa evidencia primaria, soporte, pago y declaración sin multiplicar importes. `ContributionCalculation` y `ContributionLine` concilian importes técnicos conservando códigos desconocidos. Ninguno de estos resultados crea hallazgos ni modifica el motor LEGAL. Véase [CUSTOMS_VALUATION_ENGINE.md](CUSTOMS_VALUATION_ENGINE.md).
+
+## RRNA y cumplimiento regulatorio documental
+
+Sprint 3 añade una etapa posterior a contribuciones y paralela a LEGAL:
+
+```text
+Operación + DocumentField + documentos clasificados
+                       ↓
+        Regulatory Requirement Engine
+                       ↓
+ RegulatoryRequirementEvaluation + Evidence
+
+LEGAL AuditResult (independiente y sin mutaciones)
+```
+
+`RegulatoryRequirement` conserva código, versión, estado y vigencia; sus condiciones son tipadas y sus grupos permiten AND/OR controlado. `RegulatoryRequirementEvaluation` es histórica, usa la fecha de operación y conserva el resultado automático aunque exista revisión humana. Esta capa no crea `Finding` ni transforma ausencia documental en `NON_COMPLIANT`. Véase [REGULATORY_REQUIREMENTS_ENGINE.md](REGULATORY_REQUIREMENTS_ENGINE.md).

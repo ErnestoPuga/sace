@@ -14,6 +14,8 @@ SACE 2.0 añade un motor independiente de cruces documentales. Sus resultados `M
 
 Sprint 2 incorpora valoración aduanera, agrupación de evidencia para prevenir doble conteo y conciliación técnica de contribuciones. Estos resultados también permanecen separados de LEGAL. Véase [docs/CUSTOMS_VALUATION_ENGINE.md](docs/CUSTOMS_VALUATION_ENGINE.md).
 
+Sprint 3 incorpora un motor versionado de aplicabilidad y evidencia documental RRNA. Sus resultados son conservadores, no generan hallazgos ni constituyen cumplimiento legal. Véase [docs/REGULATORY_REQUIREMENTS_ENGINE.md](docs/REGULATORY_REQUIREMENTS_ENGINE.md).
+
 ## Arquitectura
 
 - Monorepo con backend, frontend, pruebas, almacenamiento y documentación.
@@ -22,6 +24,7 @@ Sprint 2 incorpora valoración aduanera, agrupación de evidencia para prevenir 
 - Reglas DEMO/técnicas encapsuladas en `IAuditEngine`, motor normativo en `ILegalAuditEngine` y consolidación mensual en `IMonthlyAuditRule`.
 - Extracción de `DocumentField`, normalización y reglas versionadas de cruces encapsuladas en `IDocumentFieldExtractor`, `IFieldNormalizationService` e `ICrossValidationEngine`.
 - Valoración, conversión trazable y conciliación encapsuladas en `ICustomsValuationEngine`, `IMonetaryConversionService` e `IContributionReconciliationEngine`.
+- Requisitos regulatorios, vigencias y evidencia RRNA encapsulados en `IRegulatoryRequirementEngine`, sin acoplarlos a `ILegalAuditEngine`.
 - Procesadores futuros desacoplados mediante `IPedimentoParser`, `IXmlDocumentProcessor`, `IPdfDocumentProcessor` e `IExcelDocumentProcessor`.
 - Almacenamiento desacoplado mediante `IFileStorageService`; la implementación MVP es local y usa nombres físicos aleatorios.
 - Auditoría diaria programada mediante `DailyAuditWorker`, además de ejecución manual e inmediata al crear una operación.
@@ -72,7 +75,7 @@ Los registros documentales sembrados son metadata demo y no apuntan a PDFs físi
 
 La migración inicial está en `backend/Infrastructure/Migrations`.
 
-`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. Ambas migraciones tienen índices, relaciones y `Down` acotados.
+`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. `RegulatoryRequirementsEngineV1` agrega catálogo, condiciones, evidencia esperada, evaluaciones y revisiones RRNA. Las migraciones tienen índices, relaciones y `Down` acotados.
 
 ```powershell
 cd backend
@@ -177,6 +180,12 @@ SACE/
 - `POST /api/operations/{id}/valuation/calculate`
 - `GET /api/operations/{id}/contributions`
 - `POST /api/operations/{id}/contributions/reconcile`
+- `GET|POST /api/operations/{id}/regulatory-requirements`
+- `GET /api/operations/{id}/regulatory-requirements/history`
+- `POST /api/operations/{id}/regulatory-requirements/{evaluationId}/review`
+- `GET|POST /api/regulatory-requirements`
+- `GET|PUT /api/regulatory-requirements/{id}`
+- `POST /api/regulatory-requirements/{id}/version`
 - `GET|PATCH /api/operations/{operationId}/documents/{documentId}`
 - `GET /api/operations/{id}/requirements`
 - `POST /api/operations/{id}/audit`
@@ -221,7 +230,7 @@ npm run build --prefix frontend
 npm run lint --prefix frontend
 ```
 
-La suite cubre el flujo existente, el motor LEGAL, clasificación y extracción, normalización, cruces, valoración, deduplicación económica, monedas, contribuciones, seguridad, auditoría mensual y migraciones nuevas/incrementales/reversibles.
+La suite cubre el flujo existente, el motor LEGAL, clasificación y extracción, normalización, cruces, valoración, deduplicación económica, monedas, contribuciones, requisitos RRNA, evidencia alternativa, seguridad, auditoría mensual y migraciones nuevas/incrementales/reversibles.
 
 ## Limitaciones actuales del MVP
 
@@ -231,6 +240,7 @@ La suite cubre el flujo existente, el motor LEGAL, clasificación y extracción,
 - SQLite y almacenamiento local son adecuados para demostración, no para despliegue distribuido.
 - Existe un solo rol y no hay multiempresa.
 - No hay integración con SAT, ANAM, VUCEM, agentes aduanales ni servicios de notificación.
+- RRNA v1 no consulta fuentes oficiales, no inventa regulaciones y sólo contiene semillas sintéticas DRAFT; las reglas VERIFIED requieren gobierno especializado.
 - Los datos documentales precargados no incluyen archivos binarios descargables.
 - No se realiza OCR ni separación automática de PDFs multipágina.
 - La extracción XML reconoce únicamente estructuras e identificadores confiables; XML genéricos permanecen sin clasificar.
