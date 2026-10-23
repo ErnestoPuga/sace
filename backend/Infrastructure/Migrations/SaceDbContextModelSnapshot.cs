@@ -1010,6 +1010,164 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("NormativeRules");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Authority")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OfficialUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("OfficialLegalSources");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSourceVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DofPublicationCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OfficialLegalSourceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OfficialUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PublicationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VerificationNotes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("VerifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VersionLabel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Sha256");
+
+                    b.HasIndex("VerifiedBy");
+
+                    b.HasIndex("OfficialLegalSourceId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("OfficialLegalSourceVersions");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.OfficialSourceCitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Annex")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Article")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CitationLabel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CitationType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExactReferenceText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Numeral")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OfficialLegalSourceVersionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OfficialUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RuleNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Section")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subsection")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficialLegalSourceVersionId");
+
+                    b.ToTable("OfficialSourceCitations");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.OperationDocument", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1085,6 +1243,67 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("OperationDocuments");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryCatalogImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ImportedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ImportedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PackageHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PackageId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PackageVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PublicationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceVersionLabel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SummaryJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImportedBy");
+
+                    b.HasIndex("PackageHash")
+                        .IsUnique();
+
+                    b.HasIndex("PackageId");
+
+                    b.ToTable("RegulatoryCatalogImports");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryEvidenceRequirement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1116,6 +1335,47 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("RegulatoryRequirementId");
 
                     b.ToTable("RegulatoryEvidenceRequirements");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryException", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CountryCodes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomsRegime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExceptionType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OfficialSourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RegulatoryRequirementId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficialSourceCitationId");
+
+                    b.HasIndex("RegulatoryRequirementId");
+
+                    b.ToTable("RegulatoryExceptions");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirement", b =>
@@ -1180,10 +1440,21 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("VerificationLevel")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("VerifiedBy")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Version")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("VerifiedBy");
 
                     b.HasIndex("Code", "Version")
                         .IsUnique();
@@ -1351,6 +1622,101 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("RegulatoryRequirementEvaluationId");
 
                     b.ToTable("RegulatoryRequirementEvaluationEvidence");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementSourceCitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("OfficialSourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RegulatoryRequirementId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficialSourceCitationId");
+
+                    b.HasIndex("RegulatoryRequirementId", "OfficialSourceCitationId")
+                        .IsUnique();
+
+                    b.ToTable("RegulatoryRequirementSourceCitations");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryTariffEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomsRegime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DestinationCountryCodes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GoodsDescription")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nico")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedTariffFraction")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OfficialSourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OperationScope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginCountryCodes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QualificationText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QualificationType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawTariffFraction")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RegulatoryRequirementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficialSourceCitationId");
+
+                    b.HasIndex("RegulatoryRequirementId");
+
+                    b.HasIndex("NormalizedTariffFraction", "Nico", "EffectiveFrom");
+
+                    b.ToTable("RegulatoryTariffEntries");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.SystemAuditLog", b =>
@@ -1837,6 +2203,35 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Finding");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSourceVersion", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OfficialLegalSource", "OfficialLegalSource")
+                        .WithMany("Versions")
+                        .HasForeignKey("OfficialLegalSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.User", "Verifier")
+                        .WithMany()
+                        .HasForeignKey("VerifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("OfficialLegalSource");
+
+                    b.Navigation("Verifier");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.OfficialSourceCitation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OfficialLegalSourceVersion", "OfficialLegalSourceVersion")
+                        .WithMany("Citations")
+                        .HasForeignKey("OfficialLegalSourceVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OfficialLegalSourceVersion");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.OperationDocument", b =>
                 {
                     b.HasOne("Sace.Api.Domain.DocumentType", "DocumentType")
@@ -1856,6 +2251,16 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("TradeOperation");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryCatalogImport", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.User", "Importer")
+                        .WithMany()
+                        .HasForeignKey("ImportedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Importer");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryEvidenceRequirement", b =>
                 {
                     b.HasOne("Sace.Api.Domain.RegulatoryRequirement", "RegulatoryRequirement")
@@ -1865,6 +2270,34 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("RegulatoryRequirement");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryException", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "OfficialSourceCitation")
+                        .WithMany()
+                        .HasForeignKey("OfficialSourceCitationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.RegulatoryRequirement", "RegulatoryRequirement")
+                        .WithMany("Exceptions")
+                        .HasForeignKey("RegulatoryRequirementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OfficialSourceCitation");
+
+                    b.Navigation("RegulatoryRequirement");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirement", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.User", "Verifier")
+                        .WithMany()
+                        .HasForeignKey("VerifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Verifier");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementCondition", b =>
@@ -1936,6 +2369,44 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("RegulatoryRequirementEvaluation");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementSourceCitation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "OfficialSourceCitation")
+                        .WithMany("Requirements")
+                        .HasForeignKey("OfficialSourceCitationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.RegulatoryRequirement", "RegulatoryRequirement")
+                        .WithMany("SourceCitations")
+                        .HasForeignKey("RegulatoryRequirementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OfficialSourceCitation");
+
+                    b.Navigation("RegulatoryRequirement");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RegulatoryTariffEntry", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "OfficialSourceCitation")
+                        .WithMany("TariffEntries")
+                        .HasForeignKey("OfficialSourceCitationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.RegulatoryRequirement", "RegulatoryRequirement")
+                        .WithMany("TariffEntries")
+                        .HasForeignKey("RegulatoryRequirementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OfficialSourceCitation");
+
+                    b.Navigation("RegulatoryRequirement");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.SystemAuditLog", b =>
                 {
                     b.HasOne("Sace.Api.Domain.User", "User")
@@ -2001,6 +2472,23 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("History");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSource", b =>
+                {
+                    b.Navigation("Versions");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSourceVersion", b =>
+                {
+                    b.Navigation("Citations");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.OfficialSourceCitation", b =>
+                {
+                    b.Navigation("Requirements");
+
+                    b.Navigation("TariffEntries");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.OperationDocument", b =>
                 {
                     b.Navigation("Fields");
@@ -2015,6 +2503,12 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Evaluations");
 
                     b.Navigation("EvidenceRequirements");
+
+                    b.Navigation("Exceptions");
+
+                    b.Navigation("SourceCitations");
+
+                    b.Navigation("TariffEntries");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirementEvaluation", b =>

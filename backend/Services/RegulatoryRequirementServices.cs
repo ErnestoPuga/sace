@@ -25,7 +25,7 @@ public class RegulatoryRequirementEngine(SaceDbContext db) : IRegulatoryRequirem
     var validUser = await db.Users.AnyAsync(x => x.Id == userId, ct) ? userId : (Guid?)null;
     db.SystemAuditLogs.Add(Log(validUser, "REGULATORY_EVALUATION_STARTED", "TradeOperation", operationId, $"Fecha de operación: {operation.OperationDate:yyyy-MM-dd}."));
 
-    var all = await db.RegulatoryRequirements.AsNoTracking().AsSplitQuery().Include(x => x.Conditions).Include(x => x.EvidenceRequirements)
+    var all = await db.RegulatoryRequirements.AsNoTracking().AsSplitQuery().Include(x => x.Conditions).Include(x => x.EvidenceRequirements).Include(x=>x.TariffEntries).Include(x=>x.SourceCitations).ThenInclude(x=>x.OfficialSourceCitation).ThenInclude(x=>x.OfficialLegalSourceVersion).ThenInclude(x=>x.OfficialLegalSource)
       .Where(x => x.Status != RegulatoryRequirementStatus.RETIRED && (x.EffectiveFrom == null || x.EffectiveFrom <= operation.OperationDate) && (x.EffectiveTo == null || x.EffectiveTo >= operation.OperationDate)).ToListAsync(ct);
     var selected = all.GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase).Select(g => g.Where(x => x.Status == RegulatoryRequirementStatus.VERIFIED).OrderByDescending(x => x.Version).FirstOrDefault() ?? g.OrderByDescending(x => x.Version).First()).OrderBy(x => x.Code).ToList();
     var results = selected.Select(requirement => Evaluate(operation, requirement, auditId)).ToList();
@@ -48,8 +48,11 @@ public class RegulatoryRequirementEngine(SaceDbContext db) : IRegulatoryRequirem
     var conditionResults = new List<ConditionResult>();
     RegulatoryApplicabilityOutcome outcome;
     var scopeMatches = requirement.OperationScope == RegulatoryOperationScope.BOTH || requirement.OperationScope == RegulatoryOperationScope.IMPORT && operation.OperationType == OperationType.Importacion || requirement.OperationScope == RegulatoryOperationScope.EXPORT && operation.OperationType == OperationType.Exportacion;
+    var tariffMatches=requirement.TariffEntries.Where(x=>TariffMatches(operation,x)).ToList();
     if (!scopeMatches) outcome = RegulatoryApplicabilityOutcome.DOES_NOT_APPLY;
-    else if (requirement.Conditions.Count == 0) outcome = RegulatoryApplicabilityOutcome.MANUAL_REVIEW;
+    else if(requirement.TariffEntries.Count>0&&tariffMatches.Count==0)outcome=RegulatoryApplicabilityOutcome.DOES_NOT_APPLY;
+    else if(tariffMatches.Any(x=>x.QualificationType!=QualificationType.NONE))outcome=RegulatoryApplicabilityOutcome.MANUAL_REVIEW;
+    else if (requirement.Conditions.Count == 0) outcome = requirement.TariffEntries.Count>0?RegulatoryApplicabilityOutcome.APPLIES:RegulatoryApplicabilityOutcome.MANUAL_REVIEW;
     else {
       foreach (var condition in requirement.Conditions.OrderBy(x => x.ConditionGroup).ThenBy(x => x.Sequence)) conditionResults.Add(EvaluateCondition(operation, condition));
       var groups = conditionResults.GroupBy(x => x.Group, StringComparer.OrdinalIgnoreCase).Select(g => g.ToList()).ToList();
@@ -62,10 +65,12 @@ public class RegulatoryRequirementEngine(SaceDbContext db) : IRegulatoryRequirem
 
     var evidenceRows = BuildEvidence(operation, requirement, outcome);
     var evidenceStatus = EvidenceStatus(requirement, evidenceRows, outcome);
-    var explanation = Explanation(requirement, outcome, evidenceStatus, scopeMatches, conditionResults);
+    var explanation = Explanation(requirement, outcome, evidenceStatus, scopeMatches, conditionResults,tariffMatches);
     var snapshot = JsonSerializer.Serialize(new {
       operationId = operation.Id, operationDate = operation.OperationDate.Date, requirement = new { requirement.Code, requirement.Version, requirement.Status },
       conditions = conditionResults.Select(x => new { x.FieldCode, @operator = x.Operator.ToString(), x.RawValue, x.NormalizedValue, x.ExpectedValue, x.ExpectedValue2, x.Group, result = x.State.ToString() }),
+      tariffEntries=tariffMatches.Select(x=>new{x.RawTariffFraction,x.NormalizedTariffFraction,x.Nico,x.QualificationType,x.QualificationText}),
+      officialSources=requirement.SourceCitations.Select(x=>new{x.OfficialSourceCitation.CitationLabel,x.OfficialSourceCitation.OfficialUrl,source=x.OfficialSourceCitation.OfficialLegalSourceVersion.OfficialLegalSource.Title,version=x.OfficialSourceCitation.OfficialLegalSourceVersion.VersionLabel,status=x.OfficialSourceCitation.OfficialLegalSourceVersion.VerificationStatus}),
       expectedEvidence = requirement.EvidenceRequirements.Select(x => new { x.DocumentTypeCode, x.EvidenceRole, x.IsRequired, x.AlternativeGroup }),
       evidence = evidenceRows.Select(x => new { x.DocumentTypeCode, x.OperationDocumentId, x.IsPresent, x.IsRequired, x.AlternativeGroup })
     });
@@ -117,10 +122,13 @@ public class RegulatoryRequirementEngine(SaceDbContext db) : IRegulatoryRequirem
     return rows.Any(x => x.IsPresent) ? RegulatoryEvidenceStatus.PARTIAL : RegulatoryEvidenceStatus.MISSING_EVIDENCE;
   }
 
-  static string Explanation(RegulatoryRequirement requirement, RegulatoryApplicabilityOutcome outcome, RegulatoryEvidenceStatus evidence, bool scopeMatches, List<ConditionResult> results) {
+  static string Explanation(RegulatoryRequirement requirement, RegulatoryApplicabilityOutcome outcome, RegulatoryEvidenceStatus evidence, bool scopeMatches, List<ConditionResult> results,List<RegulatoryTariffEntry> tariffMatches) {
     var lines = new List<string> { $"Requisito {requirement.Code} v{requirement.Version} ({requirement.Status}).", $"Aplicabilidad automática: {outcome}. Evidencia documental: {evidence}." };
     if (!scopeMatches) lines.Add("El alcance IMPORT/EXPORT no corresponde a la operación.");
     foreach (var group in results.GroupBy(x => x.Group)) lines.Add($"Grupo {group.Key}: {string.Join(", ", group.Select(x => $"{x.FieldCode}={x.State}"))}.");
+    foreach(var entry in tariffMatches.Where(x=>x.QualificationType!=QualificationType.NONE))lines.Add($"Acotación oficial {entry.QualificationType}: {entry.QualificationText} Requiere determinación humana.");
+    foreach(var citation in requirement.SourceCitations.Select(x=>x.OfficialSourceCitation))lines.Add($"Fuente oficial: {citation.OfficialLegalSourceVersion.OfficialLegalSource.Title}, {citation.OfficialLegalSourceVersion.VersionLabel}, {citation.CitationLabel}, {citation.OfficialUrl}.");
+    if(requirement.SourceCitations.Any(x=>x.OfficialSourceCitation.OfficialLegalSourceVersion.VerificationStatus==SourceVerificationStatus.SUPERSEDED))lines.Add("Advertencia: la fuente está SUPERSEDED; se conserva por vigencia histórica.");
     if (requirement.Status == RegulatoryRequirementStatus.DRAFT) lines.Add("Regla DEMO/DRAFT: requiere revisión humana y no constituye una determinación jurídica.");
     lines.Add("Resultado LEGAL: No evaluado en esta capa."); return string.Join(Environment.NewLine, lines);
   }
@@ -131,6 +139,15 @@ public class RegulatoryRequirementEngine(SaceDbContext db) : IRegulatoryRequirem
     "QUANTITY" => o.Quantity?.ToString(CultureInfo.InvariantCulture), "UNIT" => o.Unit, "COMMERCIAL_VALUE" => o.CommercialValue?.ToString(CultureInfo.InvariantCulture), "CURRENCY" => o.Currency,
     _ => o.Documents.SelectMany(x => x.Fields).Where(x => x.FieldCode.Equals(field, StringComparison.OrdinalIgnoreCase)).OrderByDescending(x => x.UpdatedAt).Select(x => x.NormalizedValue ?? x.RawValue).FirstOrDefault()
   };
+  static bool TariffMatches(TradeOperation operation,RegulatoryTariffEntry entry){
+    var date=operation.OperationDate; if(entry.Status is SourceVerificationStatus.REJECTED or SourceVerificationStatus.STAGED||entry.EffectiveFrom>date||entry.EffectiveTo.HasValue&&entry.EffectiveTo<date)return false;
+    if(entry.OperationScope==RegulatoryOperationScope.IMPORT&&operation.OperationType!=OperationType.Importacion||entry.OperationScope==RegulatoryOperationScope.EXPORT&&operation.OperationType!=OperationType.Exportacion)return false;
+    if(RegulatoryCatalogRules.NormalizeTariff(operation.TariffFraction)!=entry.NormalizedTariffFraction)return false;
+    if(!string.IsNullOrWhiteSpace(entry.Nico)&&!entry.Nico.Equals(operation.Nico?.Trim(),StringComparison.OrdinalIgnoreCase))return false;
+    if(!string.IsNullOrWhiteSpace(entry.CustomsRegime)&&!entry.CustomsRegime.Equals(operation.CustomsRegime,StringComparison.OrdinalIgnoreCase))return false;
+    if(!MatchesCountry(entry.OriginCountryCodes,operation.OriginCountry)||!MatchesCountry(entry.DestinationCountryCodes,operation.DestinationCountry))return false;return true;
+  }
+  static bool MatchesCountry(string? allowed,string value)=>string.IsNullOrWhiteSpace(allowed)||Split(allowed).Select(Country).Where(x=>x!=null).Contains(Country(value));
   static string? Normalize(string field, string? value) {
     if (string.IsNullOrWhiteSpace(value)) return null; var normalized = Collapse(value).ToUpperInvariant();
     if (field.Equals(DocumentFieldCodes.TariffFraction, StringComparison.OrdinalIgnoreCase) || field.Equals(DocumentFieldCodes.Nico, StringComparison.OrdinalIgnoreCase)) return Regex.Replace(normalized, @"[\.\-/\s]", "");

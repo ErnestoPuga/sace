@@ -1,5 +1,9 @@
 # Arquitectura SACE MVP
 
+## Gobernanza normativa oficial
+
+La capa RRNA incorpora `OfficialLegalSource` → `OfficialLegalSourceVersion` → `OfficialSourceCitation`, vinculada a requisitos mediante una tabla puente. `RegulatoryTariffEntry` conserva fracción cruda/normalizada y NICO por separado. `IRegulatoryCatalogImportService` valida e importa paquetes atómicos; `IRegulatoryCatalogDiffService` compara versiones y estima impacto sin mutar auditorías. Esta capa no depende de `ILegalAuditEngine` ni genera hallazgos.
+
 SACE es un monolito modular: React consume una API ASP.NET Core; EF Core persiste en SQLite y `IFileStorageService` guarda archivos fuera de la raíz pública. Las reglas DEMO se resuelven en `IAuditEngine` y la consolidación mensual en `IMonthlyAuditRule`, de modo que ambas implementaciones puedan sustituirse sin acoplarlas a endpoints o UI.
 
 El módulo documental conserva esa separación:

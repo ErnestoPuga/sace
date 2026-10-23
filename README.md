@@ -16,6 +16,8 @@ Sprint 2 incorpora valoración aduanera, agrupación de evidencia para prevenir 
 
 Sprint 3 incorpora un motor versionado de aplicabilidad y evidencia documental RRNA. Sus resultados son conservadores, no generan hallazgos ni constituyen cumplimiento legal. Véase [docs/REGULATORY_REQUIREMENTS_ENGINE.md](docs/REGULATORY_REQUIREMENTS_ENGINE.md).
 
+Sprint 4 incorpora fuentes oficiales versionadas, citas, fracciones/NICO, importación transaccional, diff e impacto regulatorio. Véase [docs/OFFICIAL_REGULATORY_CATALOG.md](docs/OFFICIAL_REGULATORY_CATALOG.md).
+
 ## Arquitectura
 
 - Monorepo con backend, frontend, pruebas, almacenamiento y documentación.
@@ -25,6 +27,7 @@ Sprint 3 incorpora un motor versionado de aplicabilidad y evidencia documental R
 - Extracción de `DocumentField`, normalización y reglas versionadas de cruces encapsuladas en `IDocumentFieldExtractor`, `IFieldNormalizationService` e `ICrossValidationEngine`.
 - Valoración, conversión trazable y conciliación encapsuladas en `ICustomsValuationEngine`, `IMonetaryConversionService` e `IContributionReconciliationEngine`.
 - Requisitos regulatorios, vigencias y evidencia RRNA encapsulados en `IRegulatoryRequirementEngine`, sin acoplarlos a `ILegalAuditEngine`.
+- Gobierno e importación normativa encapsulados en `IRegulatoryCatalogImportService` e `IRegulatoryCatalogDiffService`, con SHA-256, Dry Run y fuentes oficiales verificadas.
 - Procesadores futuros desacoplados mediante `IPedimentoParser`, `IXmlDocumentProcessor`, `IPdfDocumentProcessor` e `IExcelDocumentProcessor`.
 - Almacenamiento desacoplado mediante `IFileStorageService`; la implementación MVP es local y usa nombres físicos aleatorios.
 - Auditoría diaria programada mediante `DailyAuditWorker`, además de ejecución manual e inmediata al crear una operación.
@@ -75,7 +78,7 @@ Los registros documentales sembrados son metadata demo y no apuntan a PDFs físi
 
 La migración inicial está en `backend/Infrastructure/Migrations`.
 
-`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. `RegulatoryRequirementsEngineV1` agrega catálogo, condiciones, evidencia esperada, evaluaciones y revisiones RRNA. Las migraciones tienen índices, relaciones y `Down` acotados.
+`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. `RegulatoryRequirementsEngineV1` agrega catálogo, condiciones, evidencia esperada, evaluaciones y revisiones RRNA. `OfficialRegulatoryCatalogV1` agrega fuentes, versiones, citas, vínculos, entradas arancelarias, excepciones e historial de importaciones. Las migraciones tienen índices, relaciones y `Down` acotados.
 
 ```powershell
 cd backend

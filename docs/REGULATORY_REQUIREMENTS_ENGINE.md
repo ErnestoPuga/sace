@@ -1,5 +1,7 @@
 # Motor de requisitos regulatorios RRNA v1
 
+> Sprint 4 complementa este motor con fuentes oficiales verificadas, citas y entradas arancelarias. Consulte [OFFICIAL_REGULATORY_CATALOG.md](OFFICIAL_REGULATORY_CATALOG.md).
+
 Sprint 3 añade una capa documental independiente para determinar qué requisito regulatorio podría aplicar a una operación y qué evidencia clasificada está disponible. Es un apoyo conservador: **no declara cumplimiento o incumplimiento, no produce `Finding`, no produce `NON_COMPLIANT` y no modifica `AuditResult` LEGAL**.
 
 ## Modelo y versionado
