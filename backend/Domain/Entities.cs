@@ -42,6 +42,16 @@ public enum QualificationType { NONE, ONLY_IF, EXCEPT_IF, MANUAL_SCOPE, OTHER }
 public enum RegulatoryVerificationLevel { OFFICIAL_SOURCE, OFFICIAL_COMPILATION, MANUAL_VERIFICATION }
 public enum RegulatoryCatalogImportStatus { IMPORTED, FAILED, ALREADY_IMPORTED }
 public enum RegulatoryDiffKind { ADDED, REMOVED, MODIFIED, UNCHANGED }
+public enum BatchAuditStatus { DRAFT, QUEUED, RUNNING, COMPLETED, COMPLETED_WITH_ERRORS, FAILED, CANCELLED }
+public enum BatchOperationStatus { PENDING, RUNNING, COMPLETED, FAILED, CANCELLED }
+public enum RiskProfileStatus { DRAFT, ACTIVE, RETIRED }
+public enum RiskCategory { DOCUMENTATION, CROSS_VALIDATION, VALUATION, CONTRIBUTIONS, RRNA, LEGAL, DATA_QUALITY, MANUAL_REVIEW }
+public enum RiskSourceType { DOCUMENTATION, CROSS_VALIDATION, VALUATION, CONTRIBUTIONS, RRNA, LEGAL }
+public enum RiskSeverity { INFO, LOW, MEDIUM, HIGH, CRITICAL }
+public enum RiskLevel { LOW, MEDIUM, HIGH, CRITICAL }
+public enum RiskCorrelationMode { SUM, MAX }
+public enum ReviewQueueStatus { OPEN, ASSIGNED, IN_REVIEW, WAITING_INFORMATION, RESOLVED, DISMISSED }
+public enum ReviewResolution { CORRECTED, ACCEPTED, FALSE_POSITIVE, NO_ACTION_REQUIRED, ESCALATED }
 
 public static class DocumentFieldCodes {
   public const string PedimentoNumber="PEDIMENTO_NUMBER", OperationType="OPERATION_TYPE", EntryDate="ENTRY_DATE", Date="DATE", DocumentNumber="DOCUMENT_NUMBER", CustomsOffice="CUSTOMS_OFFICE", InvoiceNumber="INVOICE_NUMBER", CoveNumber="COVE_NUMBER", TariffFraction="TARIFF_FRACTION", Nico="NICO", Description="DESCRIPTION", Quantity="QUANTITY", Unit="UNIT", UnitPrice="UNIT_PRICE", CommercialValue="COMMERCIAL_VALUE", TotalAmount="TOTAL_AMOUNT", Currency="CURRENCY", Incoterm="INCOTERM", NetWeight="NET_WEIGHT", GrossWeight="GROSS_WEIGHT", PackageCount="PACKAGE_COUNT", OriginCountry="ORIGIN_COUNTRY", DestinationCountry="DESTINATION_COUNTRY", SupplierName="SUPPLIER_NAME", BuyerName="BUYER_NAME", TransportReference="TRANSPORT_REFERENCE", TransportMode="TRANSPORT_MODE", Origin="ORIGIN", Destination="DESTINATION", Carrier="CARRIER", ExchangeRate="EXCHANGE_RATE", DeclaredCustomsValue="DECLARED_CUSTOMS_VALUE";
@@ -61,7 +71,7 @@ public class TradeOperation {
   public decimal? ExchangeRate { get; set; } public decimal? DeclaredCustomsValueMxn { get; set; } public string? Incoterm { get; set; }
   public string? Nico { get; set; } public string? GoodsDescription { get; set; }
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = []; public List<CrossValidationResult> CrossValidationResults { get; set; } = []; public List<CustomsValuationCalculation> ValuationCalculations { get; set; } = []; public List<ContributionCalculation> ContributionCalculations { get; set; } = []; public List<RegulatoryRequirementEvaluation> RegulatoryEvaluations { get; set; } = [];
+  public List<OperationDocument> Documents { get; set; } = []; public List<Audit> Audits { get; set; } = []; public List<Finding> Findings { get; set; } = []; public List<CustomsValueAdjustment> Adjustments { get; set; } = []; public List<CrossValidationResult> CrossValidationResults { get; set; } = []; public List<CustomsValuationCalculation> ValuationCalculations { get; set; } = []; public List<ContributionCalculation> ContributionCalculations { get; set; } = []; public List<RegulatoryRequirementEvaluation> RegulatoryEvaluations { get; set; } = []; public List<BatchAuditOperation> BatchAuditOperations { get; set; } = []; public List<OperationRiskScore> RiskScores { get; set; } = []; public List<ReviewQueueItem> ReviewQueueItems { get; set; } = [];
 }
 public class DocumentType { public Guid Id { get; set; } = Guid.NewGuid(); public string Code { get; set; } = ""; public string Name { get; set; } = ""; public string Description { get; set; } = ""; public CorrectionResponsible CorrectionResponsible { get; set; } public bool IsActive { get; set; } = true; }
 public class OperationDocument {
@@ -212,5 +222,44 @@ public class RegulatoryException {
 public class RegulatoryCatalogImport {
   public Guid Id { get; set; } = Guid.NewGuid(); public string PackageId { get; set; } = ""; public int PackageVersion { get; set; } public string PackageHash { get; set; } = ""; public string SourceCode { get; set; } = ""; public string SourceVersionLabel { get; set; } = ""; public DateTime PublicationDate { get; set; } public DateTime EffectiveFrom { get; set; }
   public RegulatoryCatalogImportStatus Status { get; set; } public string SummaryJson { get; set; } = "{}"; public string PayloadJson { get; set; } = "{}"; public Guid? ImportedBy { get; set; } public User? Importer { get; set; } public DateTime ImportedAt { get; set; } = DateTime.UtcNow;
+}
+public class BatchAudit {
+  public Guid Id { get; set; } = Guid.NewGuid(); public string Name { get; set; } = ""; public string? Description { get; set; } public DateTime? PeriodStart { get; set; } public DateTime? PeriodEnd { get; set; }
+  public Guid CreatedBy { get; set; } public User Creator { get; set; } = null!; public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime? StartedAt { get; set; } public DateTime? CompletedAt { get; set; }
+  public BatchAuditStatus Status { get; set; } = BatchAuditStatus.DRAFT; public int TotalOperations { get; set; } public int ProcessedOperations { get; set; } public int SuccessfulOperations { get; set; } public int FailedOperations { get; set; }
+  public string? RiskModelVersion { get; set; } public string ParametersJson { get; set; } = "{}"; public List<BatchAuditOperation> Operations { get; set; } = [];
+}
+public class BatchAuditOperation {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid BatchAuditId { get; set; } public BatchAudit BatchAudit { get; set; } = null!; public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!;
+  public BatchOperationStatus Status { get; set; } = BatchOperationStatus.PENDING; public DateTime? StartedAt { get; set; } public DateTime? CompletedAt { get; set; } public Guid? AuditId { get; set; } public Audit? Audit { get; set; } public Guid? RiskScoreId { get; set; } public OperationRiskScore? RiskScore { get; set; }
+  public string? ErrorCode { get; set; } public string? ErrorMessage { get; set; } public int RetryCount { get; set; } public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+public class RiskProfile {
+  public Guid Id { get; set; } = Guid.NewGuid(); public string Code { get; set; } = ""; public int Version { get; set; } = 1; public string Name { get; set; } = ""; public string Description { get; set; } = ""; public RiskProfileStatus Status { get; set; } = RiskProfileStatus.DRAFT;
+  public DateTime? EffectiveFrom { get; set; } public DateTime? EffectiveTo { get; set; } public decimal LowMax { get; set; } = 19; public decimal MediumMax { get; set; } = 39; public decimal HighMax { get; set; } = 69; public string CategoryCapsJson { get; set; } = "{}";
+  public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime UpdatedAt { get; set; } = DateTime.UtcNow; public List<RiskFactorDefinition> Factors { get; set; } = []; public List<OperationRiskScore> Scores { get; set; } = [];
+}
+public class RiskFactorDefinition {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid RiskProfileId { get; set; } public RiskProfile RiskProfile { get; set; } = null!; public string Code { get; set; } = ""; public string Name { get; set; } = ""; public RiskCategory Category { get; set; } public RiskSourceType SourceType { get; set; } public string? SourceOutcome { get; set; }
+  public decimal Weight { get; set; } public decimal MaxPoints { get; set; } public RiskSeverity Severity { get; set; } public bool IsActive { get; set; } = true; public string? ExplanationTemplate { get; set; } public string? CorrelationKey { get; set; } public RiskCorrelationMode CorrelationMode { get; set; } = RiskCorrelationMode.SUM; public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+public class OperationRiskScore {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!; public Guid? AuditId { get; set; } public Audit? Audit { get; set; } public Guid RiskProfileId { get; set; } public RiskProfile RiskProfile { get; set; } = null!;
+  public string RiskProfileCode { get; set; } = ""; public int RiskProfileVersion { get; set; } public int Version { get; set; } = 1; public decimal RawScore { get; set; } public decimal NormalizedScore { get; set; } public RiskLevel RiskLevel { get; set; }
+  public int FactorCount { get; set; } public int CriticalFactorCount { get; set; } public int HighFactorCount { get; set; } public string Explanation { get; set; } = ""; public DateTime CalculatedAt { get; set; } = DateTime.UtcNow; public string SnapshotJson { get; set; } = "{}"; public List<OperationRiskFactor> Factors { get; set; } = [];
+}
+public class OperationRiskFactor {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid OperationRiskScoreId { get; set; } public OperationRiskScore OperationRiskScore { get; set; } = null!; public string FactorCode { get; set; } = ""; public RiskCategory Category { get; set; }
+  public string SourceEntityType { get; set; } = ""; public Guid? SourceEntityId { get; set; } public string? SourceOutcome { get; set; } public decimal Points { get; set; } public decimal Weight { get; set; } public RiskSeverity Severity { get; set; }
+  public string Title { get; set; } = ""; public string Explanation { get; set; } = ""; public string? CorrelationKey { get; set; } public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+public class ReviewQueueItem {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid TradeOperationId { get; set; } public TradeOperation TradeOperation { get; set; } = null!; public Guid RiskScoreId { get; set; } public OperationRiskScore RiskScore { get; set; } = null!;
+  public RiskLevel OriginalPriority { get; set; } public RiskLevel CurrentPriority { get; set; } public ReviewQueueStatus Status { get; set; } = ReviewQueueStatus.OPEN; public Guid? AssignedTo { get; set; } public User? Assignee { get; set; }
+  public DateTime CreatedAt { get; set; } = DateTime.UtcNow; public DateTime? AssignedAt { get; set; } public DateTime? StartedAt { get; set; } public DateTime? CompletedAt { get; set; } public DateTime? DueDate { get; set; }
+  public ReviewResolution? Resolution { get; set; } public string? Notes { get; set; } public Guid? PriorityChangedBy { get; set; } public User? PriorityChanger { get; set; } public DateTime? PriorityChangedAt { get; set; } public string? PriorityChangeReason { get; set; } public List<ReviewQueueHistory> History { get; set; } = [];
+}
+public class ReviewQueueHistory {
+  public Guid Id { get; set; } = Guid.NewGuid(); public Guid ReviewQueueItemId { get; set; } public ReviewQueueItem ReviewQueueItem { get; set; } = null!; public string Action { get; set; } = ""; public ReviewQueueStatus? PreviousStatus { get; set; } public ReviewQueueStatus? NewStatus { get; set; } public Guid UserId { get; set; } public User User { get; set; } = null!; public string? Notes { get; set; } public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
 public class SystemAuditLog { public Guid Id { get; set; } = Guid.NewGuid(); public Guid? UserId { get; set; } public User? User { get; set; } public string Action { get; set; } = ""; public string EntityType { get; set; } = ""; public string EntityId { get; set; } = ""; public string Details { get; set; } = ""; public DateTime Timestamp { get; set; } = DateTime.UtcNow; }

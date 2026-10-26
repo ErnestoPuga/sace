@@ -32,3 +32,13 @@ public record RegulatoryCatalogImportResult(bool CanImport, bool AlreadyImported
 public record RegulatoryDiffItem(RegulatoryDiffKind Kind, string EntityType, string Key, string? Before, string? After);
 public record RegulatoryImpactAnalysis(int HistoricalOperations, int FutureOperations, IReadOnlyList<Guid> PotentiallyAffectedOperationIds, IReadOnlyList<string> TariffFractions, IReadOnlyList<string> Nicos);
 public record RegulatoryCatalogDiffResult(Guid FromVersionId, Guid ToVersionId, IReadOnlyList<RegulatoryDiffItem> Items, RegulatoryImpactAnalysis Impact);
+public record CreateBatchAuditRequest(string Name, string? Description, DateTime? DateFrom, DateTime? DateTo, OperationType? OperationType, string? CustomsOffice, string? TariffFraction, OperationStatus? OperationStatus, IReadOnlyList<Guid>? OperationIds);
+public record BatchProgressDto(Guid Id, string Name, BatchAuditStatus Status, int Total, int Processed, int Successful, int Failed, decimal PercentComplete, DateTime? StartedAt, DateTime? CompletedAt);
+public record ReviewAssignRequest(Guid? AssignedTo);
+public record ReviewStatusRequest(ReviewQueueStatus Status, ReviewResolution? Resolution, string? Notes);
+public record ReviewPriorityRequest(RiskLevel Priority, string Reason);
+public record RiskDashboardDto(int TotalOperations, int CriticalOperations, int HighOperations, int ManualReviewPending, int RrnaMissingEvidence, int ValuationMismatches, int ContributionMismatches, int IncompleteFiles, IReadOnlyList<RiskDistributionDto> Distribution, IReadOnlyList<RiskFactorAggregateDto> TopFactors, IReadOnlyList<RiskDimensionAggregateDto> TariffFractions, IReadOnlyList<RiskDimensionAggregateDto> CustomsOffices, IReadOnlyList<RiskOperationRowDto> Operations, int Page, int PageSize, int TotalRows);
+public record RiskDistributionDto(RiskLevel Level, int Count);
+public record RiskFactorAggregateDto(string FactorCode, string Title, RiskCategory Category, int Operations, decimal AveragePoints);
+public record RiskDimensionAggregateDto(string Key, int Operations, int HighCritical, decimal AverageScore);
+public record RiskOperationRowDto(Guid OperationId, string Folio, string PedimentoNumber, DateTime OperationDate, OperationType OperationType, string? CustomsOffice, string TariffFraction, decimal Score, RiskLevel Level, string TopFactors, ReviewQueueStatus? ReviewStatus);

@@ -15,7 +15,7 @@ namespace Sace.Api.Tests;
 
 public class Sprint1MigrationTests {
   private const string PreviousMigration="20260917025444_NormativeEngineV1";
-  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1","20261016222705_CustomsValuationEngineV1","20261019183747_RegulatoryRequirementsEngineV1","20261022195429_OfficialRegulatoryCatalogV1"];
+  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1","20261016222705_CustomsValuationEngineV1","20261019183747_RegulatoryRequirementsEngineV1","20261022195429_OfficialRegulatoryCatalogV1","20261026051506_BatchAuditAndRiskScoringV1"];
   private static readonly string[] ExpectedRules=["CROSS-INV-PED-INVOICE-001","CROSS-INV-PED-QTY-001","CROSS-INV-PED-UNIT-001","CROSS-INV-PED-VALUE-001","CROSS-INV-PED-CURRENCY-001","CROSS-INV-PED-INCOTERM-001","CROSS-INV-COVE-INVOICE-001","CROSS-INV-COVE-DESC-001","CROSS-INV-COVE-QTY-001","CROSS-INV-COVE-UNIT-001","CROSS-INV-COVE-VALUE-001","CROSS-INV-COVE-CURRENCY-001","CROSS-PL-PED-DESC-001","CROSS-PL-PED-QTY-001","CROSS-PL-PED-UNIT-001","CROSS-PL-PED-WEIGHT-001","CROSS-PL-TR-PACKAGES-001","CROSS-PL-TR-WEIGHT-001","CROSS-FREIGHT-INV-PED-001","CROSS-FREIGHT-PAY-INV-001","CROSS-FREIGHT-TR-INV-001","CROSS-INS-POL-PED-001","CROSS-INS-INV-PED-001","CROSS-INS-PAY-INV-001","CROSS-INC-INV-PED-001","CROSS-INC-PAY-INV-001","CROSS-VAL-MV-PED-001","CROSS-VAL-COMMERCIAL-001","CROSS-VAL-COVE-001"];
 
   [Fact]

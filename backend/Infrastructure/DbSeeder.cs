@@ -141,6 +141,7 @@ public static class DbSeeder {
     foreach(var item in regulatorySeeds.Where(x=>!existingRegulatory.Any(e=>e.Code==x.Code&&e.Version==x.Version)))db.RegulatoryRequirements.Add(item);
     await db.SaveChangesAsync();
     await SeedOfficialRegulatoryCatalogAsync(db);
+    await SeedRiskProfileAsync(db);
 
     if (!configuration.GetValue<bool>("Seed:DemoData")) return;
     var admin = await db.Users.FirstOrDefaultAsync(x => x.Email == "admin@sace.local");
@@ -188,6 +189,27 @@ public static class DbSeeder {
     await SeedMetadataSource(db,verifier,"SAT-RGCE-2026","Reglas Generales de Comercio Exterior para 2026",OfficialSourceType.RGCE,new[]{("RGCE 2026",Utc(2025,12,27)),("Primera Resolución de Modificaciones",Utc(2026,5,14)),("Segunda Resolución de Modificaciones",Utc(2026,9,22))});
     await SeedMetadataSource(db,verifier,"SAT-RGCE-ANEXO22-2026","Anexo 22 de las Reglas Generales de Comercio Exterior para 2026",OfficialSourceType.OFFICIAL_ANNEX,new[]{("Anexo 22 original",Utc(2026,1,15)),("Primera modificación al Anexo 22",Utc(2026,5,20)),("Segunda modificación al Anexo 22",Utc(2026,9,22))});
     await db.SaveChangesAsync();
+  }
+  private static async Task SeedRiskProfileAsync(SaceDbContext db) {
+    if(await db.RiskProfiles.AnyAsync(x=>x.Code=="RISK-OPS-V1"&&x.Version==1))return;
+    var profile=new RiskProfile{
+      Code="RISK-OPS-V1",Version=1,Name="Riesgo operativo SACE v1",Description="Priorización operativa explicable; no constituye una conclusión de incumplimiento legal.",Status=RiskProfileStatus.ACTIVE,EffectiveFrom=Utc(2026,1,1),LowMax=19,MediumMax=39,HighMax=69,
+      CategoryCapsJson="{\"DOCUMENTATION\":30,\"CROSS_VALIDATION\":30,\"VALUATION\":30,\"CONTRIBUTIONS\":30,\"RRNA\":35,\"LEGAL\":45,\"DATA_QUALITY\":20,\"MANUAL_REVIEW\":20}"
+    };
+    profile.Factors.AddRange([
+      Factor("DOC_MISSING","Documento obligatorio faltante",RiskCategory.DOCUMENTATION,RiskSourceType.DOCUMENTATION,"MISSING",10,10,RiskSeverity.MEDIUM,"Falta evidencia documental no DEMO."),
+      Factor("CROSS_MISMATCH","Inconsistencia documental",RiskCategory.CROSS_VALIDATION,RiskSourceType.CROSS_VALIDATION,"MISMATCH",8,8,RiskSeverity.MEDIUM,"Existe una diferencia técnica entre fuentes."),
+      Factor("VALUATION_MISMATCH","Diferencia de valoración",RiskCategory.VALUATION,RiskSourceType.VALUATION,"MISMATCH",25,25,RiskSeverity.HIGH,"La comparación técnica de valoración presentó una diferencia.","ECONOMIC_VALUE",RiskCorrelationMode.MAX),
+      Factor("VALUATION_MANUAL_REVIEW","Valoración requiere revisión",RiskCategory.VALUATION,RiskSourceType.VALUATION,"MANUAL_REVIEW",12,12,RiskSeverity.MEDIUM,"La evidencia de valoración requiere criterio humano."),
+      Factor("CONTRIBUTION_MISMATCH","Diferencia de contribuciones",RiskCategory.CONTRIBUTIONS,RiskSourceType.CONTRIBUTIONS,"MISMATCH",25,25,RiskSeverity.HIGH,"La conciliación técnica de contribuciones presentó una diferencia.","ECONOMIC_VALUE",RiskCorrelationMode.MAX),
+      Factor("CONTRIBUTION_MANUAL_REVIEW","Contribuciones requieren revisión",RiskCategory.CONTRIBUTIONS,RiskSourceType.CONTRIBUTIONS,"MANUAL_REVIEW",12,12,RiskSeverity.MEDIUM,"La conciliación requiere criterio humano."),
+      Factor("RRNA_MISSING_EVIDENCE","Evidencia RRNA faltante",RiskCategory.RRNA,RiskSourceType.RRNA,"MISSING_EVIDENCE",20,20,RiskSeverity.HIGH,"Un requisito RRNA verificado carece de evidencia."),
+      Factor("RRNA_MANUAL_REVIEW","RRNA requiere revisión",RiskCategory.RRNA,RiskSourceType.RRNA,"MANUAL_REVIEW",12,12,RiskSeverity.MEDIUM,"La aplicabilidad RRNA requiere revisión humana."),
+      Factor("LEGAL_NON_COMPLIANT","Resultado LEGAL no conforme",RiskCategory.LEGAL,RiskSourceType.LEGAL,"NON_COMPLIANT",30,30,RiskSeverity.CRITICAL,"Una regla LEGAL vigente produjo un resultado no conforme."),
+      Factor("LEGAL_MANUAL_REVIEW","LEGAL requiere revisión",RiskCategory.LEGAL,RiskSourceType.LEGAL,"MANUAL_REVIEW",15,15,RiskSeverity.HIGH,"Una regla LEGAL vigente requiere revisión humana.")
+    ]);
+    db.RiskProfiles.Add(profile);await db.SaveChangesAsync();
+    static RiskFactorDefinition Factor(string code,string name,RiskCategory category,RiskSourceType source,string outcome,decimal weight,decimal max,RiskSeverity severity,string explanation,string? correlation=null,RiskCorrelationMode mode=RiskCorrelationMode.SUM)=>new(){Code=code,Name=name,Category=category,SourceType=source,SourceOutcome=outcome,Weight=weight,MaxPoints=max,Severity=severity,ExplanationTemplate=explanation,CorrelationKey=correlation,CorrelationMode=mode};
   }
   private static async Task SeedMetadataSource(SaceDbContext db,User verifier,string code,string title,OfficialSourceType type,(string Label,DateTime Date)[] versions){
     if(await db.OfficialLegalSources.AnyAsync(x=>x.Code==code))return;const string url="https://www.sat.gob.mx/minisitio/NormatividadRMFyRGCE/";var source=new OfficialLegalSource{Code=code,Title=title,SourceType=type,Authority="Servicio de Administración Tributaria",OfficialUrl=url,Status=SourceVerificationStatus.VERIFIED};for(var i=0;i<versions.Length;i++)source.Versions.Add(new(){Version=i+1,VersionLabel=versions[i].Label,PublicationDate=versions[i].Date,EffectiveFrom=versions[i].Date,EffectiveTo=i+1<versions.Length?versions[i+1].Date.AddTicks(-1):null,OfficialUrl=url,VerificationStatus=i+1<versions.Length?SourceVerificationStatus.SUPERSEDED:SourceVerificationStatus.VERIFIED,VerifiedBy=verifier.Id,VerifiedAt=versions[i].Date,VerificationNotes="Metadatos registrados desde el portal oficial de normatividad del SAT."});db.OfficialLegalSources.Add(source);

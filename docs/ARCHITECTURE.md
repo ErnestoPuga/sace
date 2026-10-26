@@ -6,6 +6,26 @@ La capa RRNA incorpora `OfficialLegalSource` → `OfficialLegalSourceVersion` �
 
 SACE es un monolito modular: React consume una API ASP.NET Core; EF Core persiste en SQLite y `IFileStorageService` guarda archivos fuera de la raíz pública. Las reglas DEMO se resuelven en `IAuditEngine` y la consolidación mensual en `IMonthlyAuditRule`, de modo que ambas implementaciones puedan sustituirse sin acoplarlas a endpoints o UI.
 
+## Lotes, scoring y priorización operativa
+
+Sprint 5 mantiene el monolito modular y agrega una orquestación reemplazable:
+
+```text
+BatchAudit snapshot
+        ↓
+IBatchOperationPipeline
+        ↓
+Document audit → Cross/field extraction → Valuation → Contributions → RRNA → LEGAL
+        ↓
+IOperationRiskScoringService
+        ↓
+OperationRiskScore histórico → ReviewQueueItem → Dashboard
+```
+
+`IBatchAuditService` controla snapshot, límite, progreso, cancelación y reintento por operación. El pipeline consume los motores existentes; no reimplementa sus reglas. `RiskProfile` y `RiskFactorDefinition` versionan pesos, topes de categoría y correlaciones. Los factores apuntan al resultado persistido que los originó. `IReviewQueueService` aplica la máquina de estados y conserva historial.
+
+El índice parcial único de `ReviewQueueItem` impide dos revisiones abiertas para la misma operación. Las tablas de detalle usan paginación, filtros y sorting predefinido. La ejecución local es síncrona y está aislada detrás de interfaces para una futura implementación background; no hay Redis, broker, WebSocket ni procesamiento distribuido. Véase [RISK_SCORING_AND_BATCH_AUDIT.md](RISK_SCORING_AND_BATCH_AUDIT.md).
+
 El módulo documental conserva esa separación:
 
 - `IDocumentProcessingService` orquesta análisis y persistencia por archivo y mantiene delgados los endpoints individual y masivo.

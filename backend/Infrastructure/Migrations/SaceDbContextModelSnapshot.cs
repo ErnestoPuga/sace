@@ -151,6 +151,125 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("AuditResults");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.BatchAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FailedOperations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ParametersJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PeriodEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PeriodStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProcessedOperations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RiskModelVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SuccessfulOperations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TotalOperations")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("BatchAudits");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.BatchAuditOperation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AuditId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("BatchAuditId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("RiskScoreId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditId");
+
+                    b.HasIndex("RiskScoreId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TradeOperationId");
+
+                    b.HasIndex("BatchAuditId", "TradeOperationId")
+                        .IsUnique();
+
+                    b.ToTable("BatchAuditOperations");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1243,6 +1362,139 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("OperationDocuments");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.OperationRiskFactor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrelationKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FactorCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OperationRiskScoreId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Points")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceEntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceEntityType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceOutcome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Weight")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationRiskScoreId");
+
+                    b.HasIndex("FactorCode", "Category");
+
+                    b.ToTable("OperationRiskFactors");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.OperationRiskScore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AuditId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CalculatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CriticalFactorCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FactorCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HighFactorCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("NormalizedScore")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("RawScore")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RiskLevel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RiskProfileCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RiskProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RiskProfileVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditId");
+
+                    b.HasIndex("RiskProfileId");
+
+                    b.HasIndex("RiskLevel", "CalculatedAt");
+
+                    b.HasIndex("TradeOperationId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("OperationRiskScores");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryCatalogImport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1719,6 +1971,242 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("RegulatoryTariffEntries");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ReviewQueueHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NewStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreviousStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReviewQueueItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReviewQueueItemId", "Timestamp");
+
+                    b.ToTable("ReviewQueueHistory");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ReviewQueueItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("AssignedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AssignedTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CurrentPriority")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalPriority")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PriorityChangeReason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PriorityChangedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PriorityChangedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Resolution")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RiskScoreId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedTo");
+
+                    b.HasIndex("PriorityChangedBy");
+
+                    b.HasIndex("RiskScoreId");
+
+                    b.HasIndex("TradeOperationId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" NOT IN ('RESOLVED', 'DISMISSED')");
+
+                    b.HasIndex("Status", "CurrentPriority", "CreatedAt");
+
+                    b.ToTable("ReviewQueueItems");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RiskFactorDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrelationKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrelationMode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExplanationTemplate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("MaxPoints")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RiskProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceOutcome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Weight")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RiskProfileId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("RiskFactorDefinitions");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RiskProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CategoryCapsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("HighMax")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("LowMax")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("MediumMax")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code", "Version")
+                        .IsUnique();
+
+                    b.ToTable("RiskProfiles");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.SystemAuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1976,6 +2464,50 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("NormativeRule");
 
                     b.Navigation("ReviewerUser");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.BatchAudit", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.BatchAuditOperation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.Audit", "Audit")
+                        .WithMany()
+                        .HasForeignKey("AuditId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.BatchAudit", "BatchAudit")
+                        .WithMany("Operations")
+                        .HasForeignKey("BatchAuditId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OperationRiskScore", "RiskScore")
+                        .WithMany()
+                        .HasForeignKey("RiskScoreId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("BatchAuditOperations")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Audit");
+
+                    b.Navigation("BatchAudit");
+
+                    b.Navigation("RiskScore");
+
+                    b.Navigation("TradeOperation");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
@@ -2251,6 +2783,43 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("TradeOperation");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.OperationRiskFactor", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationRiskScore", "OperationRiskScore")
+                        .WithMany("Factors")
+                        .HasForeignKey("OperationRiskScoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OperationRiskScore");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.OperationRiskScore", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.Audit", "Audit")
+                        .WithMany()
+                        .HasForeignKey("AuditId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.RiskProfile", "RiskProfile")
+                        .WithMany("Scores")
+                        .HasForeignKey("RiskProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("RiskScores")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Audit");
+
+                    b.Navigation("RiskProfile");
+
+                    b.Navigation("TradeOperation");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryCatalogImport", b =>
                 {
                     b.HasOne("Sace.Api.Domain.User", "Importer")
@@ -2407,6 +2976,69 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("RegulatoryRequirement");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ReviewQueueHistory", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ReviewQueueItem", "ReviewQueueItem")
+                        .WithMany("History")
+                        .HasForeignKey("ReviewQueueItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReviewQueueItem");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ReviewQueueItem", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.User", "Assignee")
+                        .WithMany()
+                        .HasForeignKey("AssignedTo")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.User", "PriorityChanger")
+                        .WithMany()
+                        .HasForeignKey("PriorityChangedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.OperationRiskScore", "RiskScore")
+                        .WithMany()
+                        .HasForeignKey("RiskScoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("ReviewQueueItems")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Assignee");
+
+                    b.Navigation("PriorityChanger");
+
+                    b.Navigation("RiskScore");
+
+                    b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RiskFactorDefinition", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.RiskProfile", "RiskProfile")
+                        .WithMany("Factors")
+                        .HasForeignKey("RiskProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RiskProfile");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.SystemAuditLog", b =>
                 {
                     b.HasOne("Sace.Api.Domain.User", "User")
@@ -2445,6 +3077,11 @@ namespace Sace.Api.Infrastructure.Migrations
             modelBuilder.Entity("Sace.Api.Domain.Audit", b =>
                 {
                     b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.BatchAudit", b =>
+                {
+                    b.Navigation("Operations");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
@@ -2496,6 +3133,11 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("References");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.OperationRiskScore", b =>
+                {
+                    b.Navigation("Factors");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirement", b =>
                 {
                     b.Navigation("Conditions");
@@ -2516,11 +3158,25 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Evidence");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ReviewQueueItem", b =>
+                {
+                    b.Navigation("History");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.RiskProfile", b =>
+                {
+                    b.Navigation("Factors");
+
+                    b.Navigation("Scores");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.TradeOperation", b =>
                 {
                     b.Navigation("Adjustments");
 
                     b.Navigation("Audits");
+
+                    b.Navigation("BatchAuditOperations");
 
                     b.Navigation("ContributionCalculations");
 
@@ -2531,6 +3187,10 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Findings");
 
                     b.Navigation("RegulatoryEvaluations");
+
+                    b.Navigation("ReviewQueueItems");
+
+                    b.Navigation("RiskScores");
 
                     b.Navigation("ValuationCalculations");
                 });
