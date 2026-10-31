@@ -35,6 +35,38 @@ El módulo documental conserva esa separación:
 - `DocumentReference` asocia técnicamente documentos mediante COVE, e-Document, UUID CFDI, DODA u otros identificadores.
 - SHA-256 identifica contenido repetido dentro de la misma operación; no participa en autenticación.
 
+## Control IMMEX / Anexo 24 V1
+
+Sprint 6 agrega un módulo operativo independiente del motor LEGAL:
+
+```text
+TradeOperation + vínculo temporal explícito
+                    ↓
+          IMMEX Inventory Entry
+                    ↓
+             Material Usage
+                    ↓
+             Inventory Exit
+                    ↓
+              PEPS Preview
+                    ↓
+               Discharge
+                    ↓
+       Balance + Temporality
+                    ↓
+             Reconciliation
+                    ↓
+               Risk V2
+                    ↓
+       ReviewQueueItem existente
+
+LEGAL AuditResult (independiente)
+```
+
+`IImmexInventoryImportService` hace la importación idempotente; `IImmexDischargeEngine` separa preview de confirmación transaccional; `IImmexTemporalityService` aplica reglas verificadas y versionadas; `IImmexInventoryReconciliationService` detecta diferencias sin autocorregir. Entradas, salidas, consumos, descargos, reversiones, conversiones, activo fijo e issues conservan relaciones y bitácora.
+
+Los listados operativos usan paginación en servidor y consultas `AsNoTracking`; los reportes proyectan únicamente sus columnas. La correlación `IMMEX_TEMPORALITY:{entryId}` evita penalizar varias veces la misma temporalidad. Un score alto reutiliza la cola de revisión de Sprint 5. Ninguna señal IMMEX crea `Finding`, modifica `AuditResult` ni invoca `ILegalAuditEngine`. Detalle y limitaciones en [IMMEX_INVENTORY_CONTROL.md](IMMEX_INVENTORY_CONTROL.md).
+
 ## Motor de cruces documentales
 
 Sprint 1 incorpora un flujo técnico separado del motor normativo:

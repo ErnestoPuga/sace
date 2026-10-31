@@ -15,7 +15,7 @@ namespace Sace.Api.Tests;
 
 public class Sprint1MigrationTests {
   private const string PreviousMigration="20260917025444_NormativeEngineV1";
-  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1","20261016222705_CustomsValuationEngineV1","20261019183747_RegulatoryRequirementsEngineV1","20261022195429_OfficialRegulatoryCatalogV1","20261026051506_BatchAuditAndRiskScoringV1"];
+  private static readonly string[] ExpectedMigrations=["20260907190536_InitialCreate","20260911001711_RealImportDocuments",PreviousMigration,"20261016183617_CrossValidationEngineV1","20261016222705_CustomsValuationEngineV1","20261019183747_RegulatoryRequirementsEngineV1","20261022195429_OfficialRegulatoryCatalogV1","20261026051506_BatchAuditAndRiskScoringV1","20261026231346_ImmexInventoryControlV1"];
   private static readonly string[] ExpectedRules=["CROSS-INV-PED-INVOICE-001","CROSS-INV-PED-QTY-001","CROSS-INV-PED-UNIT-001","CROSS-INV-PED-VALUE-001","CROSS-INV-PED-CURRENCY-001","CROSS-INV-PED-INCOTERM-001","CROSS-INV-COVE-INVOICE-001","CROSS-INV-COVE-DESC-001","CROSS-INV-COVE-QTY-001","CROSS-INV-COVE-UNIT-001","CROSS-INV-COVE-VALUE-001","CROSS-INV-COVE-CURRENCY-001","CROSS-PL-PED-DESC-001","CROSS-PL-PED-QTY-001","CROSS-PL-PED-UNIT-001","CROSS-PL-PED-WEIGHT-001","CROSS-PL-TR-PACKAGES-001","CROSS-PL-TR-WEIGHT-001","CROSS-FREIGHT-INV-PED-001","CROSS-FREIGHT-PAY-INV-001","CROSS-FREIGHT-TR-INV-001","CROSS-INS-POL-PED-001","CROSS-INS-INV-PED-001","CROSS-INS-PAY-INV-001","CROSS-INC-INV-PED-001","CROSS-INC-PAY-INV-001","CROSS-VAL-MV-PED-001","CROSS-VAL-COMMERCIAL-001","CROSS-VAL-COVE-001"];
 
   [Fact]
@@ -54,17 +54,15 @@ public class Sprint1MigrationTests {
   public async Task Existing_database_preserves_data_seed_is_idempotent_and_down_is_scoped(){
     var path=TempDatabase();
     try {
-      Guid operationId,documentId,auditId,resultId;
+      var userId=Guid.NewGuid();
+      var operationId=Guid.NewGuid();
+      var documentTypeId=Guid.NewGuid();
+      var documentId=Guid.NewGuid();
+      var auditId=Guid.NewGuid();
+      var resultId=Guid.NewGuid();
       await using(var db=Context(path)){
         var migrator=db.Database.GetService<IMigrator>();await migrator.MigrateAsync(PreviousMigration);
-        var user=new User{Name="Synthetic migration user",Email="migration@example.invalid",PasswordHash="synthetic"};
-        var operation=new TradeOperation{Folio="MIG-SYNTHETIC",PedimentoNumber="26",Period="2026-10",OperationDate=new DateTime(2026,10,1,0,0,0,DateTimeKind.Utc),TariffFraction="40169304"};
-        var type=new DocumentType{Code="MIG_DOC",Name="Synthetic document"};
-        var document=new OperationDocument{TradeOperation=operation,DocumentType=type,OriginalFileName="synthetic.pdf",StoredFileName="synthetic.pdf",MimeType="application/pdf",Extension=".pdf",FilePath="synthetic/none",FileSize=1,UploadedBy=user.Id};
-        var audit=new Audit{Number="AUD-MIGRATION",TradeOperation=operation,AuditType=AuditType.Legal,Status=AuditStatus.Completed,CreatedBy=user.Id};
-        var result=new AuditResult{Audit=audit,RuleId="LEGAL-SYNTHETIC",Status=ResultStatus.Valid,Outcome=LegalOutcome.COMPLIANT,IsIncludedInLegalCompliance=true};
-        db.AddRange(user,operation,type,document,audit,result);await db.SaveChangesAsync();
-        operationId=operation.Id;documentId=document.Id;auditId=audit.Id;resultId=result.Id;
+        await InsertHistoricalData(db,userId,operationId,documentTypeId,documentId,auditId,resultId);
         await migrator.MigrateAsync();
       }
 
@@ -90,10 +88,10 @@ public class Sprint1MigrationTests {
         Assert.Equal(0,await SchemaCount(db,"table","DocumentFields"));
         Assert.Equal(0,await SchemaCount(db,"table","CrossValidationRules"));
         Assert.Equal(0,await SchemaCount(db,"table","CrossValidationResults"));
-        Assert.True(await db.TradeOperations.AnyAsync(x=>x.Id==operationId));
-        Assert.True(await db.OperationDocuments.AnyAsync(x=>x.Id==documentId));
-        Assert.True(await db.Audits.AnyAsync(x=>x.Id==auditId));
-        Assert.Equal(LegalOutcome.COMPLIANT,(await db.AuditResults.SingleAsync(x=>x.Id==resultId)).Outcome);
+        Assert.True(await RowExists(db,"TradeOperations",operationId));
+        Assert.True(await RowExists(db,"OperationDocuments",documentId));
+        Assert.True(await RowExists(db,"Audits",auditId));
+        Assert.Equal("COMPLIANT",await ScalarText(db,"SELECT Outcome FROM AuditResults WHERE Id=$id",resultId));
       }
     } finally { DeleteDatabase(path); }
   }
@@ -103,6 +101,18 @@ public class Sprint1MigrationTests {
   private static void DeleteDatabase(string path){SqliteConnection.ClearAllPools();var directory=Path.GetDirectoryName(path)!;if(Directory.Exists(directory)&&Path.GetFileName(directory).StartsWith("sace-migration-",StringComparison.Ordinal))Directory.Delete(directory,true);}
   private static async Task<long> SchemaCount(SaceDbContext db,string type,string name){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText="SELECT COUNT(*) FROM sqlite_master WHERE type=$type AND name=$name";command.Parameters.AddWithValue("$type",type);command.Parameters.AddWithValue("$name",name);return Convert.ToInt64(await command.ExecuteScalarAsync());}
   private static async Task<long> ForeignKeyCount(SaceDbContext db,string table){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=$"PRAGMA foreign_key_list([{table}])";await using var reader=await command.ExecuteReaderAsync();long count=0;while(await reader.ReadAsync())count++;return count;}
+  private static async Task InsertHistoricalData(SaceDbContext db,Guid userId,Guid operationId,Guid documentTypeId,Guid documentId,Guid auditId,Guid resultId){
+    var now=new DateTime(2026,10,1,0,0,0,DateTimeKind.Utc);
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Users (Id,Name,Email,PasswordHash,Role,IsActive,CreatedAt) VALUES ({userId},{"Synthetic migration user"},{"migration@example.invalid"},{"synthetic"},{"Administrator"},{true},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO TradeOperations (Id,Folio,PedimentoNumber,OperationType,Period,OperationDate,PedimentoKey,TariffFraction,OriginCountry,DestinationCountry,CustomsRegime,IsImmex,PreferentialTreatment,TradeAgreement,Status,CreatedAt,UpdatedAt) VALUES ({operationId},{"MIG-SYNTHETIC"},{"26"},{"Importacion"},{"2026-10"},{now},{"IN"},{"40169304"},{"MX"},{"US"},{"Definitivo"},{false},{false},{(string?)null},{"PendingAudit"},{now},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO DocumentTypes (Id,Code,Name,Description,CorrectionResponsible,IsActive) VALUES ({documentTypeId},{"MIG_DOC"},{"Synthetic document"},{"Synthetic"},{"Operations"},{true})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO OperationDocuments (Id,TradeOperationId,DocumentTypeId,OriginalFileName,StoredFileName,MimeType,Extension,FileSize,FilePath,Version,ValidationStatus,UploadedAt,UploadedBy) VALUES ({documentId},{operationId},{documentTypeId},{"synthetic.pdf"},{"synthetic.pdf"},{"application/pdf"},{".pdf"},{1L},{"synthetic/none"},{1},{"Valid"},{now},{userId})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Audits (Id,Number,TradeOperationId,Period,AuditType,Status,StartedAt,CompletedAt,CreatedBy) VALUES ({auditId},{"AUD-MIGRATION"},{operationId},{"2026-10"},{"Legal"},{"Completed"},{now},{now},{userId})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO AuditResults (Id,AuditId,DocumentTypeId,Status,Message,RuleId,CreatedAt,CalculationJson,ComparedValuesJson,EvidenceJson,Outcome,IsIncludedInLegalCompliance,RequiresManualReview) VALUES ({resultId},{auditId},{documentTypeId},{"Valid"},{"Preserve"},{"LEGAL-SYNTHETIC"},{now},{"{}"},{"{}"},{"{}"},{"COMPLIANT"},{true},{false})");
+  }
+  private static async Task<bool> RowExists(SaceDbContext db,string table,Guid id)=>(await ScalarLong(db,$"SELECT COUNT(*) FROM [{table}] WHERE Id=$id",id))==1;
+  private static async Task<long> ScalarLong(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToInt64(await command.ExecuteScalarAsync());}
+  private static async Task<string?> ScalarText(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToString(await command.ExecuteScalarAsync());}
 }
 
 public class Sprint1SecurityTests {

@@ -20,6 +20,8 @@ Sprint 4 incorpora fuentes oficiales versionadas, citas, fracciones/NICO, import
 
 Sprint 5 incorpora auditoría por lotes con snapshot, scoring de riesgo operativo explicable y cola de revisión humana. El score prioriza trabajo y no equivale a incumplimiento legal. Véase [docs/RISK_SCORING_AND_BATCH_AUDIT.md](docs/RISK_SCORING_AND_BATCH_AUDIT.md).
 
+Sprint 6 incorpora **Control IMMEX / Anexo 24 V1**: programas, materiales/productos, entradas temporales, consumos, activo fijo, descargos PEPS, temporalidades, conciliación, issues y reportes CSV. Es control operativo con cobertura explícita; no certifica el Anexo 24 ni produce conclusiones LEGAL. Véase [docs/IMMEX_INVENTORY_CONTROL.md](docs/IMMEX_INVENTORY_CONTROL.md).
+
 ## Arquitectura
 
 - Monorepo con backend, frontend, pruebas, almacenamiento y documentación.
@@ -31,6 +33,7 @@ Sprint 5 incorpora auditoría por lotes con snapshot, scoring de riesgo operativ
 - Requisitos regulatorios, vigencias y evidencia RRNA encapsulados en `IRegulatoryRequirementEngine`, sin acoplarlos a `ILegalAuditEngine`.
 - Gobierno e importación normativa encapsulados en `IRegulatoryCatalogImportService` e `IRegulatoryCatalogDiffService`, con SHA-256, Dry Run y fuentes oficiales verificadas.
 - Lotes encapsulados en `IBatchAuditService`/`IBatchOperationPipeline`; scoring y revisión en `IOperationRiskScoringService`, `IRiskDashboardService` e `IReviewQueueService`.
+- Inventario IMMEX encapsulado en `IImmexInventoryImportService`, `IImmexDischargeEngine`, `IImmexTemporalityService` e `IImmexInventoryReconciliationService`, separado de `ILegalAuditEngine`.
 - Procesadores futuros desacoplados mediante `IPedimentoParser`, `IXmlDocumentProcessor`, `IPdfDocumentProcessor` e `IExcelDocumentProcessor`.
 - Almacenamiento desacoplado mediante `IFileStorageService`; la implementación MVP es local y usa nombres físicos aleatorios.
 - Auditoría diaria programada mediante `DailyAuditWorker`, además de ejecución manual e inmediata al crear una operación.
@@ -81,7 +84,7 @@ Los registros documentales sembrados son metadata demo y no apuntan a PDFs físi
 
 La migración inicial está en `backend/Infrastructure/Migrations`.
 
-`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. `RegulatoryRequirementsEngineV1` agrega catálogo, condiciones, evidencia esperada, evaluaciones y revisiones RRNA. `OfficialRegulatoryCatalogV1` agrega fuentes, versiones, citas, vínculos, entradas arancelarias, excepciones e historial de importaciones. `BatchAuditAndRiskScoringV1` agrega snapshots de lote, perfiles/factores/scores de riesgo y la cola de revisión. Las migraciones tienen índices, relaciones y `Down` acotados.
+`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. `RegulatoryRequirementsEngineV1` agrega catálogo, condiciones, evidencia esperada, evaluaciones y revisiones RRNA. `OfficialRegulatoryCatalogV1` agrega fuentes, versiones, citas, vínculos, entradas arancelarias, excepciones e historial de importaciones. `BatchAuditAndRiskScoringV1` agrega snapshots de lote, perfiles/factores/scores de riesgo y la cola de revisión. `ImmexInventoryControlV1` agrega estructuras IMMEX, PEPS, temporalidades, conversiones, conciliación e issues sin reemplazar tablas previas. Las migraciones tienen índices, relaciones y `Down` acotados.
 
 ```powershell
 cd backend

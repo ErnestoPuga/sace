@@ -47,10 +47,49 @@ public class Sprint3ClassificationAndSecurityTests {
 
 public class Sprint3MigrationTests {
   const string Sprint2="20261016222705_CustomsValuationEngineV1";
-  [Fact] public async Task Fresh_incremental_and_down_migration_are_scoped(){var directory=Path.Combine(Path.GetTempPath(),$"sace-sprint3-{Guid.NewGuid():N}");Directory.CreateDirectory(directory);var path=Path.Combine(directory,"validation.db");Guid userId,operationId,resultId;try{await using(var db=Context(path)){var migrator=db.Database.GetService<IMigrator>();await migrator.MigrateAsync(Sprint2);var user=new User{Name="Migration",Email="sprint3@example.invalid",PasswordHash="x"};var op=new TradeOperation{Folio="SPRINT3-MIG",PedimentoNumber="26",Period="2026-10",OperationDate=new(2026,10,1),TariffFraction="1"};var audit=new Audit{Number="LEGAL-S3",TradeOperation=op,AuditType=AuditType.Legal,Status=AuditStatus.Completed,CreatedBy=user.Id};var legal=new AuditResult{Audit=audit,RuleId="LEGAL-S3",Status=ResultStatus.Valid,Outcome=LegalOutcome.COMPLIANT,IsIncludedInLegalCompliance=true};db.AddRange(user,op,audit,legal);await db.SaveChangesAsync();userId=user.Id;operationId=op.Id;resultId=legal.Id;await migrator.MigrateAsync();Assert.Equal(5,await CountTables(db,"RegulatoryRequirements","RegulatoryRequirementConditions","RegulatoryEvidenceRequirements","RegulatoryRequirementEvaluations","RegulatoryRequirementEvaluationEvidence"));Assert.True(await IndexExists(db,"IX_RegulatoryRequirements_Code_Version"));await migrator.MigrateAsync(Sprint2);}await using(var db=Context(path)){Assert.Equal(0,await CountTables(db,"RegulatoryRequirements","RegulatoryRequirementConditions","RegulatoryEvidenceRequirements","RegulatoryRequirementEvaluations","RegulatoryRequirementEvaluationEvidence"));Assert.True(await db.Users.AnyAsync(x=>x.Id==userId));Assert.True(await db.TradeOperations.AnyAsync(x=>x.Id==operationId));Assert.Equal(LegalOutcome.COMPLIANT,(await db.AuditResults.SingleAsync(x=>x.Id==resultId)).Outcome);}}finally{SqliteConnection.ClearAllPools();if(Directory.Exists(directory))Directory.Delete(directory,true);}}
+  [Fact]
+  public async Task Fresh_incremental_and_down_migration_are_scoped(){
+    var directory=Path.Combine(Path.GetTempPath(),$"sace-sprint3-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(directory);
+    var path=Path.Combine(directory,"validation.db");
+    var userId=Guid.NewGuid();
+    var operationId=Guid.NewGuid();
+    var auditId=Guid.NewGuid();
+    var resultId=Guid.NewGuid();
+    try {
+      await using(var db=Context(path)){
+        var migrator=db.Database.GetService<IMigrator>();
+        await migrator.MigrateAsync(Sprint2);
+        await InsertHistoricalLegalData(db,userId,operationId,auditId,resultId);
+        await migrator.MigrateAsync();
+        Assert.Equal(5,await CountTables(db,"RegulatoryRequirements","RegulatoryRequirementConditions","RegulatoryEvidenceRequirements","RegulatoryRequirementEvaluations","RegulatoryRequirementEvaluationEvidence"));
+        Assert.True(await IndexExists(db,"IX_RegulatoryRequirements_Code_Version"));
+        await migrator.MigrateAsync(Sprint2);
+      }
+      await using(var db=Context(path)){
+        Assert.Equal(0,await CountTables(db,"RegulatoryRequirements","RegulatoryRequirementConditions","RegulatoryEvidenceRequirements","RegulatoryRequirementEvaluations","RegulatoryRequirementEvaluationEvidence"));
+        Assert.True(await RowExists(db,"Users",userId));
+        Assert.True(await RowExists(db,"TradeOperations",operationId));
+        Assert.Equal("COMPLIANT",await ScalarText(db,"SELECT Outcome FROM AuditResults WHERE Id=$id",resultId));
+      }
+    } finally {
+      SqliteConnection.ClearAllPools();
+      if(Directory.Exists(directory))Directory.Delete(directory,true);
+    }
+  }
   static SaceDbContext Context(string path)=>new(new DbContextOptionsBuilder<SaceDbContext>().UseSqlite($"Data Source={path}").Options);
   static async Task<long> CountTables(SaceDbContext db,params string[] names){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=System.Data.ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=$"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ({string.Join(',',names.Select((_,i)=>$"$n{i}"))})";for(var i=0;i<names.Length;i++)command.Parameters.AddWithValue($"$n{i}",names[i]);return Convert.ToInt64(await command.ExecuteScalarAsync());}
   static async Task<bool> IndexExists(SaceDbContext db,string name){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=System.Data.ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText="SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name=$name";command.Parameters.AddWithValue("$name",name);return Convert.ToInt64(await command.ExecuteScalarAsync())==1;}
+  static async Task InsertHistoricalLegalData(SaceDbContext db,Guid userId,Guid operationId,Guid auditId,Guid resultId){
+    var now=new DateTime(2026,10,1,0,0,0,DateTimeKind.Utc);
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Users (Id,Name,Email,PasswordHash,Role,IsActive,CreatedAt) VALUES ({userId},{"Migration"},{"sprint3@example.invalid"},{"x"},{"Administrator"},{true},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO TradeOperations (Id,Folio,PedimentoNumber,OperationType,Period,OperationDate,PedimentoKey,TariffFraction,OriginCountry,DestinationCountry,CustomsRegime,IsImmex,PreferentialTreatment,TradeAgreement,Status,CreatedAt,UpdatedAt) VALUES ({operationId},{"SPRINT3-MIG"},{"26"},{"Importacion"},{"2026-10"},{now},{"IN"},{"1"},{"MX"},{"US"},{"Definitivo"},{false},{false},{(string?)null},{"PendingAudit"},{now},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Audits (Id,Number,TradeOperationId,Period,AuditType,Status,StartedAt,CompletedAt,CreatedBy) VALUES ({auditId},{"LEGAL-S3"},{operationId},{"2026-10"},{"Legal"},{"Completed"},{now},{now},{userId})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO AuditResults (Id,AuditId,DocumentTypeId,Status,Message,RuleId,CreatedAt,CalculationJson,ComparedValuesJson,EvidenceJson,Outcome,IsIncludedInLegalCompliance,RequiresManualReview) VALUES ({resultId},{auditId},{(Guid?)null},{"Valid"},{"Preserve"},{"LEGAL-S3"},{now},{"{}"},{"{}"},{"{}"},{"COMPLIANT"},{true},{false})");
+  }
+  static async Task<bool> RowExists(SaceDbContext db,string table,Guid id)=>(await ScalarLong(db,$"SELECT COUNT(*) FROM [{table}] WHERE Id=$id",id))==1;
+  static async Task<long> ScalarLong(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=System.Data.ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToInt64(await command.ExecuteScalarAsync());}
+  static async Task<string?> ScalarText(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=System.Data.ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToString(await command.ExecuteScalarAsync());}
 }
 
 public sealed class RegulatoryFixture:IAsyncDisposable {

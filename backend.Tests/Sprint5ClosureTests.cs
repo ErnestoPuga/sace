@@ -56,9 +56,48 @@ public class Sprint5ApiSecurityTests {
 
 public class Sprint5MigrationTests {
   private const string Previous="20261022195429_OfficialRegulatoryCatalogV1";
-  [Fact] public async Task Incremental_and_down_migration_preserve_existing_data(){var directory=Path.Combine(Path.GetTempPath(),$"sace-sprint5-{Guid.NewGuid():N}");Directory.CreateDirectory(directory);var path=Path.Combine(directory,"test.db");try{Guid operationId,legalResultId;await using(var db=Context(path)){var migrator=db.Database.GetService<IMigrator>();await migrator.MigrateAsync(Previous);var user=new User{Name="Migration",Email="sprint5@example.invalid",PasswordHash="x"};var op=new TradeOperation{Folio="KEEP-S5",PedimentoNumber="26",Period="2026-10",OperationDate=new(2026,10,1),TariffFraction="1"};var audit=new Audit{Number="LEGAL-S5",TradeOperation=op,AuditType=AuditType.Legal,Status=AuditStatus.Completed,CreatedBy=user.Id};var legal=new AuditResult{Audit=audit,RuleId="LEGAL-S5",Status=ResultStatus.Valid,Outcome=LegalOutcome.COMPLIANT,IsIncludedInLegalCompliance=true,Message="Preserve"};db.AddRange(user,op,audit,legal);await db.SaveChangesAsync();operationId=op.Id;legalResultId=legal.Id;await migrator.MigrateAsync();Assert.True(await Table(db,"BatchAudits"));Assert.True(await Table(db,"OperationRiskScores"));Assert.True(await Table(db,"ReviewQueueItems"));await migrator.MigrateAsync(Previous);}await using(var db=Context(path)){Assert.False(await Table(db,"BatchAudits"));Assert.True(await db.TradeOperations.AnyAsync(x=>x.Id==operationId));Assert.Equal(LegalOutcome.COMPLIANT,(await db.AuditResults.SingleAsync(x=>x.Id==legalResultId)).Outcome);}}finally{SqliteConnection.ClearAllPools();if(Directory.Exists(directory))Directory.Delete(directory,true);}}
+  [Fact]
+  public async Task Incremental_and_down_migration_preserve_existing_data(){
+    var directory=Path.Combine(Path.GetTempPath(),$"sace-sprint5-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(directory);
+    var path=Path.Combine(directory,"test.db");
+    try {
+      var userId=Guid.NewGuid();
+      var operationId=Guid.NewGuid();
+      var auditId=Guid.NewGuid();
+      var legalResultId=Guid.NewGuid();
+      await using(var db=Context(path)){
+        var migrator=db.Database.GetService<IMigrator>();
+        await migrator.MigrateAsync(Previous);
+        await InsertHistoricalLegalData(db,userId,operationId,auditId,legalResultId,"KEEP-S5","sprint5@example.invalid","LEGAL-S5");
+        await migrator.MigrateAsync();
+        Assert.True(await Table(db,"BatchAudits"));
+        Assert.True(await Table(db,"OperationRiskScores"));
+        Assert.True(await Table(db,"ReviewQueueItems"));
+        await migrator.MigrateAsync(Previous);
+      }
+      await using(var db=Context(path)){
+        Assert.False(await Table(db,"BatchAudits"));
+        Assert.True(await RowExists(db,"TradeOperations",operationId));
+        Assert.Equal("COMPLIANT",await ScalarText(db,"SELECT Outcome FROM AuditResults WHERE Id=$id",legalResultId));
+      }
+    } finally {
+      SqliteConnection.ClearAllPools();
+      if(Directory.Exists(directory))Directory.Delete(directory,true);
+    }
+  }
   static SaceDbContext Context(string path)=>new(new DbContextOptionsBuilder<SaceDbContext>().UseSqlite($"Data Source={path}").Options);
   static async Task<bool> Table(SaceDbContext db,string name){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=System.Data.ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText="SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=$name";command.Parameters.AddWithValue("$name",name);return Convert.ToInt64(await command.ExecuteScalarAsync())==1;}
+  static async Task InsertHistoricalLegalData(SaceDbContext db,Guid userId,Guid operationId,Guid auditId,Guid resultId,string folio,string email,string auditNumber){
+    var now=new DateTime(2026,10,1,0,0,0,DateTimeKind.Utc);
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Users (Id,Name,Email,PasswordHash,Role,IsActive,CreatedAt) VALUES ({userId},{"Migration"},{email},{"x"},{"Administrator"},{true},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO TradeOperations (Id,Folio,PedimentoNumber,OperationType,Period,OperationDate,PedimentoKey,TariffFraction,OriginCountry,DestinationCountry,CustomsRegime,IsImmex,PreferentialTreatment,TradeAgreement,Status,CreatedAt,UpdatedAt) VALUES ({operationId},{folio},{"26"},{"Importacion"},{"2026-10"},{now},{"IN"},{"1"},{"MX"},{"US"},{"Definitivo"},{false},{false},{(string?)null},{"PendingAudit"},{now},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Audits (Id,Number,TradeOperationId,Period,AuditType,Status,StartedAt,CompletedAt,CreatedBy) VALUES ({auditId},{auditNumber},{operationId},{"2026-10"},{"Legal"},{"Completed"},{now},{now},{userId})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO AuditResults (Id,AuditId,DocumentTypeId,Status,Message,RuleId,CreatedAt,CalculationJson,ComparedValuesJson,EvidenceJson,Outcome,IsIncludedInLegalCompliance,RequiresManualReview) VALUES ({resultId},{auditId},{(Guid?)null},{"Valid"},{"Preserve"},{auditNumber},{now},{"{}"},{"{}"},{"{}"},{"COMPLIANT"},{true},{false})");
+  }
+  static async Task<bool> RowExists(SaceDbContext db,string table,Guid id)=>(await ScalarLong(db,$"SELECT COUNT(*) FROM [{table}] WHERE Id=$id",id))==1;
+  static async Task<long> ScalarLong(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=System.Data.ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToInt64(await command.ExecuteScalarAsync());}
+  static async Task<string?> ScalarText(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=System.Data.ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToString(await command.ExecuteScalarAsync());}
 }
 
 sealed class RiskFixture:IAsyncDisposable {

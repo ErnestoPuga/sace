@@ -17,6 +17,47 @@ namespace Sace.Api.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
 
+            modelBuilder.Entity("Sace.Api.Domain.Annex24CoverageItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CoverageStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ImplementationReference")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OfficialSourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("OfficialSourceCitationId");
+
+                    b.ToTable("Annex24CoverageItems");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.Audit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1030,6 +1071,779 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("FindingId");
 
                     b.ToTable("FindingHistories");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexDischargeReversal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OriginalDischargeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ReversedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReversedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OriginalDischargeId")
+                        .IsUnique();
+
+                    b.HasIndex("ReversedBy");
+
+                    b.ToTable("ImmexDischargeReversals");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexFixedAsset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Brand")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EntryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExitDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExitPedimentoNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExitType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Model")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nico")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PedimentoKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PedimentoNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SerialNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffFraction")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TradeOperationId");
+
+                    b.HasIndex("ImmexProgramId", "Status");
+
+                    b.ToTable("ImmexFixedAssets");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryDischarge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Automatic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DischargeMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DischargedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("EntryBalanceAfter")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("EntryBalanceBefore")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InventoryEntryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InventoryExitId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("QuantityDischarged")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("SourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("SourceCitationId");
+
+                    b.HasIndex("InventoryEntryId", "InventoryExitId")
+                        .IsUnique();
+
+                    b.HasIndex("InventoryExitId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("ImmexInventoryDischarges");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AvailableQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommercialUnit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CommercialValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomsOffice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EntryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InventoryClassification")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("MaterialId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nico")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OperationDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("OriginalQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PartNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PedimentoItemNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PedimentoKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PedimentoNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffFraction")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TemporalRuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("TemporalityCalculatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TemporalityExplanation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TemporalityOutcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TemporalityRuleCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TemporalityRuleVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TigieUnit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntryDate");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("OperationDocumentId");
+
+                    b.HasIndex("PedimentoNumber");
+
+                    b.HasIndex("TariffFraction");
+
+                    b.HasIndex("TemporalRuleId");
+
+                    b.HasIndex("ImmexProgramId", "DueDate");
+
+                    b.HasIndex("TradeOperationId", "Sequence")
+                        .IsUnique()
+                        .HasFilter("\"TradeOperationId\" IS NOT NULL");
+
+                    b.HasIndex("ImmexProgramId", "MaterialId", "Status");
+
+                    b.ToTable("ImmexInventoryEntries");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryExit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AllocatedQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DischargeOutcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExitDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExitType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("MaterialId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nico")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PedimentoKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PedimentoNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffFraction")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("UnallocatedQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("PedimentoNumber");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("TradeOperationId");
+
+                    b.HasIndex("ImmexProgramId", "ExitDate");
+
+                    b.ToTable("ImmexInventoryExits");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryIssue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DetectedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("InventoryEntryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("InventoryExitId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IssueCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Resolution")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ResolvedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryEntryId");
+
+                    b.HasIndex("InventoryExitId");
+
+                    b.HasIndex("ResolvedBy");
+
+                    b.HasIndex("ImmexProgramId", "Status", "IssueCode");
+
+                    b.ToTable("ImmexInventoryIssues");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexMaterial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommercialUnit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MaterialCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nico")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffFraction")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TigieUnit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImmexProgramId", "MaterialCode")
+                        .IsUnique();
+
+                    b.ToTable("ImmexMaterials");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexMaterialUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("LossQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("QuantityUsed")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("WasteQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImmexProgramId");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SourceDocumentId");
+
+                    b.HasIndex("SourceFieldId");
+
+                    b.ToTable("ImmexMaterialUsages");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexProduct", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommercialUnit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nico")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffFraction")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TigieUnit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImmexProgramId", "ProductCode")
+                        .IsUnique();
+
+                    b.ToTable("ImmexProducts");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexProgram", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CertifiedCompanyStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FiscalAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IndustrialPlantAddressesJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProgramModality")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProgramNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Rfc")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WarehouseAddressesJson")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgramNumber")
+                        .IsUnique();
+
+                    b.HasIndex("Rfc");
+
+                    b.ToTable("ImmexPrograms");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexTemporalityRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConditionsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DurationType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DurationUnit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DurationValue")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InventoryClassification")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsOverride")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OfficialSourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RequiresManualQualification")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficialSourceCitationId");
+
+                    b.HasIndex("Code", "Version")
+                        .IsUnique();
+
+                    b.ToTable("ImmexTemporalityRules");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexUnitConversion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Factor")
+                        .HasPrecision(18, 9)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FromUnit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ToUnit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId", "FromUnit", "ToUnit", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("ImmexUnitConversions");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.NormativeRule", b =>
@@ -2267,6 +3081,9 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CustomsRegimeCode")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal?>("DeclaredCustomsValueMxn")
                         .HasColumnType("TEXT");
 
@@ -2287,6 +3104,9 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<decimal?>("GrossWeight")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("ImmexProgramId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Incoterm")
                         .HasColumnType("TEXT");
 
@@ -2294,6 +3114,9 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsImmex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool?>("IsTemporaryImport")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Nico")
@@ -2349,6 +3172,8 @@ namespace Sace.Api.Infrastructure.Migrations
 
                     b.HasIndex("Folio")
                         .IsUnique();
+
+                    b.HasIndex("ImmexProgramId");
 
                     b.ToTable("TradeOperations");
                 });
@@ -2423,6 +3248,16 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("ValuationComponentId");
 
                     b.ToTable("ValuationComponentEvidence");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.Annex24CoverageItem", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "OfficialSourceCitation")
+                        .WithMany()
+                        .HasForeignKey("OfficialSourceCitationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("OfficialSourceCitation");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.Audit", b =>
@@ -2733,6 +3568,263 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Finding");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexDischargeReversal", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexInventoryDischarge", "OriginalDischarge")
+                        .WithOne("Reversal")
+                        .HasForeignKey("Sace.Api.Domain.ImmexDischargeReversal", "OriginalDischargeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("ReversedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OriginalDischarge");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexFixedAsset", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany()
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("ImmexFixedAssets")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ImmexProgram");
+
+                    b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryDischarge", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexInventoryEntry", "InventoryEntry")
+                        .WithMany("Discharges")
+                        .HasForeignKey("InventoryEntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.ImmexInventoryExit", "InventoryExit")
+                        .WithMany("Discharges")
+                        .HasForeignKey("InventoryExitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.ImmexMaterial", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "SourceCitation")
+                        .WithMany()
+                        .HasForeignKey("SourceCitationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("InventoryEntry");
+
+                    b.Navigation("InventoryExit");
+
+                    b.Navigation("Material");
+
+                    b.Navigation("SourceCitation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryEntry", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany()
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.ImmexMaterial", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
+                        .WithMany()
+                        .HasForeignKey("OperationDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.ImmexTemporalityRule", "TemporalRule")
+                        .WithMany()
+                        .HasForeignKey("TemporalRuleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("ImmexInventoryEntries")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ImmexProgram");
+
+                    b.Navigation("Material");
+
+                    b.Navigation("OperationDocument");
+
+                    b.Navigation("TemporalRule");
+
+                    b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryExit", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany()
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.ImmexMaterial", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.ImmexProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("ImmexInventoryExits")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ImmexProgram");
+
+                    b.Navigation("Material");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("TradeOperation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryIssue", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany()
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.ImmexInventoryEntry", "InventoryEntry")
+                        .WithMany()
+                        .HasForeignKey("InventoryEntryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.ImmexInventoryExit", "InventoryExit")
+                        .WithMany()
+                        .HasForeignKey("InventoryExitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.User", "Resolver")
+                        .WithMany()
+                        .HasForeignKey("ResolvedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ImmexProgram");
+
+                    b.Navigation("InventoryEntry");
+
+                    b.Navigation("InventoryExit");
+
+                    b.Navigation("Resolver");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexMaterial", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany("Materials")
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImmexProgram");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexMaterialUsage", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany()
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.ImmexMaterial", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.ImmexProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "SourceDocument")
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentField", "SourceField")
+                        .WithMany()
+                        .HasForeignKey("SourceFieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ImmexProgram");
+
+                    b.Navigation("Material");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("SourceDocument");
+
+                    b.Navigation("SourceField");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexProduct", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany("Products")
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImmexProgram");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexTemporalityRule", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "OfficialSourceCitation")
+                        .WithMany()
+                        .HasForeignKey("OfficialSourceCitationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("OfficialSourceCitation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexUnitConversion", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexMaterial", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Material");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSourceVersion", b =>
@@ -3048,6 +4140,16 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.TradeOperation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ImmexProgram", "ImmexProgram")
+                        .WithMany()
+                        .HasForeignKey("ImmexProgramId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ImmexProgram");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.ValuationComponentEvidence", b =>
                 {
                     b.HasOne("Sace.Api.Domain.DocumentField", "DocumentField")
@@ -3107,6 +4209,28 @@ namespace Sace.Api.Infrastructure.Migrations
             modelBuilder.Entity("Sace.Api.Domain.Finding", b =>
                 {
                     b.Navigation("History");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryDischarge", b =>
+                {
+                    b.Navigation("Reversal");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryEntry", b =>
+                {
+                    b.Navigation("Discharges");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryExit", b =>
+                {
+                    b.Navigation("Discharges");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ImmexProgram", b =>
+                {
+                    b.Navigation("Materials");
+
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSource", b =>
@@ -3185,6 +4309,12 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("Findings");
+
+                    b.Navigation("ImmexFixedAssets");
+
+                    b.Navigation("ImmexInventoryEntries");
+
+                    b.Navigation("ImmexInventoryExits");
 
                     b.Navigation("RegulatoryEvaluations");
 

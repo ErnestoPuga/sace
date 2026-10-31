@@ -105,13 +105,62 @@ public sealed class ValuationFixture : IAsyncDisposable {
 
 public class Sprint2MigrationTests {
   private const string Sprint1="20261016183617_CrossValidationEngineV1";
-  [Fact] public async Task Incremental_migration_preserves_sprint1_and_legal_data_and_down_is_scoped(){var path=TempDatabase();try{Guid userId,operationId,documentId,auditId,auditResultId,fieldId,crossResultId;await using(var db=Context(path)){var migrator=db.Database.GetService<IMigrator>();await migrator.MigrateAsync(Sprint1);var user=new User{Name="Migration",Email="sprint2@example.invalid",PasswordHash="x"};var op=new TradeOperation{Folio="SPRINT2-MIG",PedimentoNumber="26",Period="2026-10",OperationDate=DateTime.UtcNow,TariffFraction="1"};var type=new DocumentType{Code="MIG2",Name="Migration"};var doc=new OperationDocument{TradeOperation=op,DocumentType=type,OriginalFileName="synthetic.pdf",UploadedBy=user.Id};var field=new DocumentField{OperationDocument=doc,FieldCode=DocumentFieldCodes.TotalAmount,RawValue="100",NormalizedValue="100",DataType=DocumentFieldDataType.DECIMAL,ExtractionMethod=ExtractionMethod.MANUAL};var audit=new Audit{Number="LEGAL-MIG2",TradeOperation=op,AuditType=AuditType.Legal,Status=AuditStatus.Completed,CreatedBy=user.Id};var legal=new AuditResult{Audit=audit,RuleId="LEGAL-MIG2",Status=ResultStatus.Valid,Outcome=LegalOutcome.COMPLIANT,IsIncludedInLegalCompliance=true};var rule=new CrossValidationRule{Code="MIG2-CROSS",Name="Migration",SourceDocumentTypeCode="MIG2",SourceFieldCode=DocumentFieldCodes.TotalAmount,TargetDocumentTypeCode="MIG2",TargetFieldCode=DocumentFieldCodes.TotalAmount,ComparisonType=CrossComparisonType.EXACT_NUMERIC};var cross=new CrossValidationResult{TradeOperation=op,Audit=audit,CrossValidationRule=rule,RuleCode=rule.Code,RuleVersion=1,SourceDocument=doc,TargetDocument=doc,SourceField=field,TargetField=field,Outcome=CrossValidationOutcome.MATCH};db.AddRange(user,op,type,doc,field,audit,legal,rule,cross);await db.SaveChangesAsync();userId=user.Id;operationId=op.Id;documentId=doc.Id;auditId=audit.Id;auditResultId=legal.Id;fieldId=field.Id;crossResultId=cross.Id;await migrator.MigrateAsync();Assert.Equal(5,await CountTables(db,"CustomsValuationCalculations","CustomsValuationComponents","ValuationComponentEvidence","ContributionCalculations","ContributionLines"));Assert.True(await IndexExists(db,"IX_CustomsValuationComponents_CustomsValuationCalculationId_EconomicKey"));Assert.True(await ForeignKeys(db,"ValuationComponentEvidence")>=3);await migrator.MigrateAsync(Sprint1);}await using(var db=Context(path)){Assert.Equal(0,await CountTables(db,"CustomsValuationCalculations","CustomsValuationComponents","ValuationComponentEvidence","ContributionCalculations","ContributionLines"));Assert.True(await db.Users.AnyAsync(x=>x.Id==userId));Assert.True(await db.TradeOperations.AnyAsync(x=>x.Id==operationId));Assert.True(await db.OperationDocuments.AnyAsync(x=>x.Id==documentId));Assert.True(await db.Audits.AnyAsync(x=>x.Id==auditId));Assert.Equal(LegalOutcome.COMPLIANT,(await db.AuditResults.SingleAsync(x=>x.Id==auditResultId)).Outcome);Assert.True(await db.DocumentFields.AnyAsync(x=>x.Id==fieldId));Assert.True(await db.CrossValidationResults.AnyAsync(x=>x.Id==crossResultId));}}finally{DeleteDatabase(path);}}
+  [Fact]
+  public async Task Incremental_migration_preserves_sprint1_and_legal_data_and_down_is_scoped(){
+    var path=TempDatabase();
+    var userId=Guid.NewGuid();
+    var operationId=Guid.NewGuid();
+    var documentTypeId=Guid.NewGuid();
+    var documentId=Guid.NewGuid();
+    var auditId=Guid.NewGuid();
+    var auditResultId=Guid.NewGuid();
+    var fieldId=Guid.NewGuid();
+    var ruleId=Guid.NewGuid();
+    var crossResultId=Guid.NewGuid();
+    try {
+      await using(var db=Context(path)){
+        var migrator=db.Database.GetService<IMigrator>();
+        await migrator.MigrateAsync(Sprint1);
+        await InsertHistoricalSprint1Data(db,userId,operationId,documentTypeId,documentId,auditId,auditResultId,fieldId,ruleId,crossResultId);
+        await migrator.MigrateAsync();
+        Assert.Equal(5,await CountTables(db,"CustomsValuationCalculations","CustomsValuationComponents","ValuationComponentEvidence","ContributionCalculations","ContributionLines"));
+        Assert.True(await IndexExists(db,"IX_CustomsValuationComponents_CustomsValuationCalculationId_EconomicKey"));
+        Assert.True(await ForeignKeys(db,"ValuationComponentEvidence")>=3);
+        await migrator.MigrateAsync(Sprint1);
+      }
+      await using(var db=Context(path)){
+        Assert.Equal(0,await CountTables(db,"CustomsValuationCalculations","CustomsValuationComponents","ValuationComponentEvidence","ContributionCalculations","ContributionLines"));
+        Assert.True(await RowExists(db,"Users",userId));
+        Assert.True(await RowExists(db,"TradeOperations",operationId));
+        Assert.True(await RowExists(db,"OperationDocuments",documentId));
+        Assert.True(await RowExists(db,"Audits",auditId));
+        Assert.Equal("COMPLIANT",await ScalarText(db,"SELECT Outcome FROM AuditResults WHERE Id=$id",auditResultId));
+        Assert.True(await RowExists(db,"DocumentFields",fieldId));
+        Assert.True(await RowExists(db,"CrossValidationResults",crossResultId));
+      }
+    } finally { DeleteDatabase(path); }
+  }
   private static SaceDbContext Context(string path)=>new(new DbContextOptionsBuilder<SaceDbContext>().UseSqlite($"Data Source={path}").Options);
   private static string TempDatabase(){var directory=Path.Combine(Path.GetTempPath(),$"sace-sprint2-{Guid.NewGuid():N}");Directory.CreateDirectory(directory);return Path.Combine(directory,"validation.db");}
   private static void DeleteDatabase(string path){SqliteConnection.ClearAllPools();var directory=Path.GetDirectoryName(path)!;if(Directory.Exists(directory)&&Path.GetFileName(directory).StartsWith("sace-sprint2-",StringComparison.Ordinal))Directory.Delete(directory,true);}
   private static async Task<long> CountTables(SaceDbContext db,params string[] names){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=$"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ({string.Join(',',names.Select((_,i)=>$"$n{i}"))})";for(var i=0;i<names.Length;i++)command.Parameters.AddWithValue($"$n{i}",names[i]);return Convert.ToInt64(await command.ExecuteScalarAsync());}
   private static async Task<bool> IndexExists(SaceDbContext db,string name){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText="SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name=$name";command.Parameters.AddWithValue("$name",name);return Convert.ToInt64(await command.ExecuteScalarAsync())==1;}
   private static async Task<long> ForeignKeys(SaceDbContext db,string table){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=$"PRAGMA foreign_key_list([{table}])";await using var reader=await command.ExecuteReaderAsync();long count=0;while(await reader.ReadAsync())count++;return count;}
+  private static async Task InsertHistoricalSprint1Data(SaceDbContext db,Guid userId,Guid operationId,Guid documentTypeId,Guid documentId,Guid auditId,Guid auditResultId,Guid fieldId,Guid ruleId,Guid crossResultId){
+    var now=new DateTime(2026,10,1,0,0,0,DateTimeKind.Utc);
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Users (Id,Name,Email,PasswordHash,Role,IsActive,CreatedAt) VALUES ({userId},{"Migration"},{"sprint2@example.invalid"},{"x"},{"Administrator"},{true},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO TradeOperations (Id,Folio,PedimentoNumber,OperationType,Period,OperationDate,PedimentoKey,TariffFraction,OriginCountry,DestinationCountry,CustomsRegime,IsImmex,PreferentialTreatment,TradeAgreement,Status,CreatedAt,UpdatedAt) VALUES ({operationId},{"SPRINT2-MIG"},{"26"},{"Importacion"},{"2026-10"},{now},{"IN"},{"1"},{"MX"},{"US"},{"Definitivo"},{false},{false},{(string?)null},{"PendingAudit"},{now},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO DocumentTypes (Id,Code,Name,Description,CorrectionResponsible,IsActive) VALUES ({documentTypeId},{"MIG2"},{"Migration"},{"Synthetic"},{"Operations"},{true})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO OperationDocuments (Id,TradeOperationId,DocumentTypeId,OriginalFileName,StoredFileName,MimeType,Extension,FileSize,FilePath,Version,ValidationStatus,UploadedAt,UploadedBy) VALUES ({documentId},{operationId},{documentTypeId},{"synthetic.pdf"},{"synthetic.pdf"},{"application/pdf"},{".pdf"},{1L},{"synthetic/none"},{1},{"Valid"},{now},{userId})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO DocumentFields (Id,OperationDocumentId,FieldCode,RawValue,NormalizedValue,DataType,Unit,Currency,Confidence,ExtractionMethod,SourceLocator,GroupKey,Sequence,IsManuallyConfirmed,CreatedAt,UpdatedAt) VALUES ({fieldId},{documentId},{DocumentFieldCodes.TotalAmount},{"100"},{"100"},{"DECIMAL"},{(string?)null},{(string?)null},{(double?)null},{"MANUAL"},{(string?)null},{(string?)null},{(int?)null},{false},{now},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Audits (Id,Number,TradeOperationId,Period,AuditType,Status,StartedAt,CompletedAt,CreatedBy) VALUES ({auditId},{"LEGAL-MIG2"},{operationId},{"2026-10"},{"Legal"},{"Completed"},{now},{now},{userId})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO AuditResults (Id,AuditId,DocumentTypeId,Status,Message,RuleId,CreatedAt,CalculationJson,ComparedValuesJson,EvidenceJson,Outcome,IsIncludedInLegalCompliance,RequiresManualReview) VALUES ({auditResultId},{auditId},{documentTypeId},{"Valid"},{"Preserve"},{"LEGAL-MIG2"},{now},{"{}"},{"{}"},{"{}"},{"COMPLIANT"},{true},{false})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO CrossValidationRules (Id,Code,Version,Name,Description,Category,SourceDocumentTypeCode,SourceFieldCode,TargetDocumentTypeCode,TargetFieldCode,ComparisonType,AbsoluteTolerance,PercentTolerance,Severity,MissingEvidenceBehavior,IsActive,EffectiveFrom,EffectiveTo,CreatedAt,UpdatedAt) VALUES ({ruleId},{"MIG2-CROSS"},{1},{"Migration"},{"Synthetic"},{"DOCUMENT"},{"MIG2"},{DocumentFieldCodes.TotalAmount},{"MIG2"},{DocumentFieldCodes.TotalAmount},{"EXACT_NUMERIC"},{(decimal?)null},{(decimal?)null},{"MEDIUM"},{"INSUFFICIENT_EVIDENCE"},{true},{(DateTime?)null},{(DateTime?)null},{now},{now})");
+    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO CrossValidationResults (Id,TradeOperationId,AuditId,CrossValidationRuleId,RuleCode,RuleVersion,SourceDocumentId,TargetDocumentId,SourceFieldId,TargetFieldId,SourceRawValue,TargetRawValue,SourceNormalizedValue,TargetNormalizedValue,Outcome,NumericDifference,PercentDifference,Confidence,Explanation,EvaluatedAt) VALUES ({crossResultId},{operationId},{auditId},{ruleId},{"MIG2-CROSS"},{1},{documentId},{documentId},{fieldId},{fieldId},{"100"},{"100"},{"100"},{"100"},{"MATCH"},{0m},{0m},{1d},{"Synthetic match"},{now})");
+  }
+  private static async Task<bool> RowExists(SaceDbContext db,string table,Guid id)=>(await ScalarLong(db,$"SELECT COUNT(*) FROM [{table}] WHERE Id=$id",id))==1;
+  private static async Task<long> ScalarLong(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToInt64(await command.ExecuteScalarAsync());}
+  private static async Task<string?> ScalarText(SaceDbContext db,string sql,Guid id){var connection=(SqliteConnection)db.Database.GetDbConnection();if(connection.State!=ConnectionState.Open)await connection.OpenAsync();await using var command=connection.CreateCommand();command.CommandText=sql;command.Parameters.AddWithValue("$id",id);return Convert.ToString(await command.ExecuteScalarAsync());}
 }
 
 public class Sprint2ApiSecurityTests {
