@@ -22,6 +22,8 @@ Sprint 5 incorpora auditoría por lotes con snapshot, scoring de riesgo operativ
 
 Sprint 6 incorpora **Control IMMEX / Anexo 24 V1**: programas, materiales/productos, entradas temporales, consumos, activo fijo, descargos PEPS, temporalidades, conciliación, issues y reportes CSV. Es control operativo con cobertura explícita; no certifica el Anexo 24 ni produce conclusiones LEGAL. Véase [docs/IMMEX_INVENTORY_CONTROL.md](docs/IMMEX_INVENTORY_CONTROL.md).
 
+Sprint 7 incorpora **LEGAL V2**: aplicabilidad por fecha de operación, evidencia explícita, fuentes y citas verificadas, snapshots inmutables, revisión humana, corrección y hallazgos exclusivos para `NON_COMPLIANT`. Véase [docs/ADVANCED_LEGAL_ENGINE.md](docs/ADVANCED_LEGAL_ENGINE.md).
+
 ## Arquitectura
 
 - Monorepo con backend, frontend, pruebas, almacenamiento y documentación.
@@ -34,6 +36,7 @@ Sprint 6 incorpora **Control IMMEX / Anexo 24 V1**: programas, materiales/produc
 - Gobierno e importación normativa encapsulados en `IRegulatoryCatalogImportService` e `IRegulatoryCatalogDiffService`, con SHA-256, Dry Run y fuentes oficiales verificadas.
 - Lotes encapsulados en `IBatchAuditService`/`IBatchOperationPipeline`; scoring y revisión en `IOperationRiskScoringService`, `IRiskDashboardService` e `IReviewQueueService`.
 - Inventario IMMEX encapsulado en `IImmexInventoryImportService`, `IImmexDischargeEngine`, `IImmexTemporalityService` e `IImmexInventoryReconciliationService`, separado de `ILegalAuditEngine`.
+- Decisión jurídica avanzada encapsulada en `ILegalEvidenceResolver`, `ILegalAuditEngineV2` e `ILegalReviewService`, sin usar riesgo como evidencia.
 - Procesadores futuros desacoplados mediante `IPedimentoParser`, `IXmlDocumentProcessor`, `IPdfDocumentProcessor` e `IExcelDocumentProcessor`.
 - Almacenamiento desacoplado mediante `IFileStorageService`; la implementación MVP es local y usa nombres físicos aleatorios.
 - Auditoría diaria programada mediante `DailyAuditWorker`, además de ejecución manual e inmediata al crear una operación.
@@ -84,7 +87,7 @@ Los registros documentales sembrados son metadata demo y no apuntan a PDFs físi
 
 La migración inicial está en `backend/Infrastructure/Migrations`.
 
-`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. `RegulatoryRequirementsEngineV1` agrega catálogo, condiciones, evidencia esperada, evaluaciones y revisiones RRNA. `OfficialRegulatoryCatalogV1` agrega fuentes, versiones, citas, vínculos, entradas arancelarias, excepciones e historial de importaciones. `BatchAuditAndRiskScoringV1` agrega snapshots de lote, perfiles/factores/scores de riesgo y la cola de revisión. `ImmexInventoryControlV1` agrega estructuras IMMEX, PEPS, temporalidades, conversiones, conciliación e issues sin reemplazar tablas previas. Las migraciones tienen índices, relaciones y `Down` acotados.
+`CrossValidationEngineV1` agrega únicamente `DocumentFields`, `CrossValidationRules` y `CrossValidationResults`. `CustomsValuationEngineV1` agrega los cálculos/componentes/evidencias de valoración y los cálculos/líneas de contribuciones. `RegulatoryRequirementsEngineV1` agrega catálogo, condiciones, evidencia esperada, evaluaciones y revisiones RRNA. `OfficialRegulatoryCatalogV1` agrega fuentes, versiones, citas, vínculos, entradas arancelarias, excepciones e historial de importaciones. `BatchAuditAndRiskScoringV1` agrega snapshots de lote, perfiles/factores/scores de riesgo y la cola de revisión. `ImmexInventoryControlV1` agrega estructuras IMMEX, PEPS, temporalidades, conversiones, conciliación e issues sin reemplazar tablas previas. `AdvancedLegalDecisionEngineV1` agrega condiciones, evidencia, mappings, citas, snapshots, revisión y vínculos de hallazgos LEGAL V2. Las migraciones tienen índices, relaciones y `Down` acotados.
 
 ```powershell
 cd backend
@@ -200,6 +203,12 @@ SACE/
 - `POST /api/operations/{id}/audit`
 - `POST /api/operations/{id}/legal-audit`
 - `GET /api/operations/{id}/legal-audits`
+- `GET /api/operations/{id}/legal`
+- `POST /api/operations/{id}/legal/evaluate`
+- `GET /api/operations/{id}/legal/history`
+- `POST /api/legal/results/{id}/review`
+- `GET /api/legal/findings`
+- `GET|POST /api/legal-rules`
 - `GET|POST /api/operations/{id}/adjustments`
 - `GET|POST /api/batch-audits`
 - `GET /api/batch-audits/{id}`

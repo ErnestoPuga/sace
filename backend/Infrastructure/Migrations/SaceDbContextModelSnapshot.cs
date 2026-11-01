@@ -113,6 +113,9 @@ namespace Sace.Api.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ApplicabilityExplanation")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("AuditId")
                         .HasColumnType("TEXT");
 
@@ -127,10 +130,19 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DecisionExplanation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DecisionMode")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid?>("DocumentTypeId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("EvaluatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceExplanation")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EvidenceJson")
@@ -171,8 +183,29 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<Guid?>("ReviewerUserId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("RuleCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RuleEffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RuleEffectiveTo")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("RuleId")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RuleTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RuleVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceCitationSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceVersionId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -188,6 +221,8 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("NormativeRuleId");
 
                     b.HasIndex("ReviewerUserId");
+
+                    b.HasIndex("SourceVersionId");
 
                     b.ToTable("AuditResults");
                 });
@@ -990,7 +1025,20 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<Guid>("AuditId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ConfirmedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrectionNotes")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CorrectionResponsible")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrectionStatus")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -1001,11 +1049,26 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DismissalReason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DismissedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DismissedBy")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("DocumentTypeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LatestAuditResultId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Number")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OriginalAuditResultId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ResolvedAt")
@@ -1033,7 +1096,15 @@ namespace Sace.Api.Infrastructure.Migrations
 
                     b.HasIndex("AuditId");
 
+                    b.HasIndex("ConfirmedBy");
+
+                    b.HasIndex("DismissedBy");
+
                     b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex("LatestAuditResultId");
+
+                    b.HasIndex("OriginalAuditResultId");
 
                     b.HasIndex("TradeOperationId");
 
@@ -1846,6 +1917,273 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("ImmexUnitConversions");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.LegalEvaluationEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AuditResultId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CapturedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<Guid?>("DocumentFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FieldCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Outcome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceEntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceEntityType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditResultId");
+
+                    b.HasIndex("DocumentFieldId");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("SourceEntityType", "SourceEntityId");
+
+                    b.ToTable("LegalEvaluationEvidence");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalEvidenceMapping", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("NormativeRuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceFieldCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceOutcome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetEvidenceCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormativeRuleId", "SourceType", "SourceOutcome");
+
+                    b.ToTable("LegalEvidenceMappings");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalEvidenceRequirement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AlternativeGroup")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ManualVerificationRequired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("MinimumConfidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("NormativeRuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OfficialSourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficialSourceCitationId");
+
+                    b.HasIndex("NormativeRuleId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("LegalEvidenceRequirements");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalReviewDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AuditResultId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("FindingId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreviousOutcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ReviewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReviewedOutcome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReviewerUserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FindingId");
+
+                    b.HasIndex("ReviewerUserId");
+
+                    b.HasIndex("AuditResultId", "ReviewedAt");
+
+                    b.ToTable("LegalReviewDecisions");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalRuleCondition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExpectedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExpectedValue2")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureBehavior")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GroupCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("NormativeRuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operator")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormativeRuleId", "GroupCode", "Sequence");
+
+                    b.ToTable("LegalRuleConditions");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalRuleSourceCitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("NormativeRuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OfficialSourceCitationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficialSourceCitationId");
+
+                    b.HasIndex("NormativeRuleId", "OfficialSourceCitationId")
+                        .IsUnique();
+
+                    b.ToTable("LegalRuleSourceCitations");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.NormativeRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1894,6 +2232,13 @@ namespace Sace.Api.Infrastructure.Migrations
 
                     b.Property<bool>("IsLegalRule")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("LegalStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Limitations")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3292,6 +3637,11 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasForeignKey("ReviewerUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Sace.Api.Domain.OfficialLegalSourceVersion", "SourceVersion")
+                        .WithMany()
+                        .HasForeignKey("SourceVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Audit");
 
                     b.Navigation("DocumentType");
@@ -3299,6 +3649,8 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("NormativeRule");
 
                     b.Navigation("ReviewerUser");
+
+                    b.Navigation("SourceVersion");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.BatchAudit", b =>
@@ -3540,11 +3892,31 @@ namespace Sace.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Sace.Api.Domain.User", "Confirmer")
+                        .WithMany()
+                        .HasForeignKey("ConfirmedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.User", "Dismisser")
+                        .WithMany()
+                        .HasForeignKey("DismissedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Sace.Api.Domain.DocumentType", "DocumentType")
                         .WithMany()
                         .HasForeignKey("DocumentTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.AuditResult", "LatestAuditResult")
+                        .WithMany()
+                        .HasForeignKey("LatestAuditResultId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Sace.Api.Domain.AuditResult", "OriginalAuditResult")
+                        .WithMany()
+                        .HasForeignKey("OriginalAuditResultId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
                         .WithMany("Findings")
@@ -3554,7 +3926,15 @@ namespace Sace.Api.Infrastructure.Migrations
 
                     b.Navigation("Audit");
 
+                    b.Navigation("Confirmer");
+
+                    b.Navigation("Dismisser");
+
                     b.Navigation("DocumentType");
+
+                    b.Navigation("LatestAuditResult");
+
+                    b.Navigation("OriginalAuditResult");
 
                     b.Navigation("TradeOperation");
                 });
@@ -3825,6 +4205,116 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Material");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalEvaluationEvidence", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.AuditResult", "AuditResult")
+                        .WithMany("LegalEvidence")
+                        .HasForeignKey("AuditResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.DocumentField", "DocumentField")
+                        .WithMany()
+                        .HasForeignKey("DocumentFieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AuditResult");
+
+                    b.Navigation("Document");
+
+                    b.Navigation("DocumentField");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalEvidenceMapping", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.NormativeRule", "NormativeRule")
+                        .WithMany("LegalEvidenceMappings")
+                        .HasForeignKey("NormativeRuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NormativeRule");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalEvidenceRequirement", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.NormativeRule", "NormativeRule")
+                        .WithMany("LegalEvidenceRequirements")
+                        .HasForeignKey("NormativeRuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "OfficialSourceCitation")
+                        .WithMany()
+                        .HasForeignKey("OfficialSourceCitationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("NormativeRule");
+
+                    b.Navigation("OfficialSourceCitation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalReviewDecision", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.AuditResult", "AuditResult")
+                        .WithMany("LegalReviews")
+                        .HasForeignKey("AuditResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.Finding", "Finding")
+                        .WithMany("LegalReviews")
+                        .HasForeignKey("FindingId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.User", "ReviewerUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AuditResult");
+
+                    b.Navigation("Finding");
+
+                    b.Navigation("ReviewerUser");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalRuleCondition", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.NormativeRule", "NormativeRule")
+                        .WithMany("LegalConditions")
+                        .HasForeignKey("NormativeRuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NormativeRule");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.LegalRuleSourceCitation", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.NormativeRule", "NormativeRule")
+                        .WithMany("LegalSourceCitations")
+                        .HasForeignKey("NormativeRuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OfficialSourceCitation", "OfficialSourceCitation")
+                        .WithMany()
+                        .HasForeignKey("OfficialSourceCitationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NormativeRule");
+
+                    b.Navigation("OfficialSourceCitation");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSourceVersion", b =>
@@ -4181,6 +4671,13 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Results");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.AuditResult", b =>
+                {
+                    b.Navigation("LegalEvidence");
+
+                    b.Navigation("LegalReviews");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.BatchAudit", b =>
                 {
                     b.Navigation("Operations");
@@ -4209,6 +4706,8 @@ namespace Sace.Api.Infrastructure.Migrations
             modelBuilder.Entity("Sace.Api.Domain.Finding", b =>
                 {
                     b.Navigation("History");
+
+                    b.Navigation("LegalReviews");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.ImmexInventoryDischarge", b =>
@@ -4231,6 +4730,17 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Materials");
 
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.NormativeRule", b =>
+                {
+                    b.Navigation("LegalConditions");
+
+                    b.Navigation("LegalEvidenceMappings");
+
+                    b.Navigation("LegalEvidenceRequirements");
+
+                    b.Navigation("LegalSourceCitations");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.OfficialLegalSource", b =>

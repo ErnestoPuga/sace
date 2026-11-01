@@ -57,3 +57,9 @@ public record ImmexFixedAssetRequest(Guid ImmexProgramId,Guid? TradeOperationId,
 public record ImmexUnitConversionRequest(Guid MaterialId,string FromUnit,string ToUnit,decimal Factor,DateTime EffectiveFrom,DateTime? EffectiveTo,string Source,bool IsVerified);
 public record ImmexOperationLinkRequest(Guid? ImmexProgramId,bool? IsTemporaryImport,string? CustomsRegimeCode);
 public record ImmexInventoryQualificationRequest(Guid MaterialId,ImmexInventoryClassification InventoryClassification);
+public record LegalConditionRequest(string GroupCode,int Sequence,string FieldCode,LegalConditionOperator Operator,string? ExpectedValue,string? ExpectedValue2,LegalValueType ValueType,bool Required,LegalFailureBehavior FailureBehavior);
+public record LegalEvidenceRequirementRequest(string Code,string Name,LegalEvidenceType EvidenceType,bool Required,string? AlternativeGroup,double? MinimumConfidence,bool ManualVerificationRequired,string? Description,Guid? OfficialSourceCitationId);
+public record LegalEvidenceMappingRequest(LegalEvidenceType SourceType,string? SourceOutcome,string TargetEvidenceCode,string? SourceFieldCode);
+public record LegalRuleV2Request(string Code,string Title,string Description,NormativeSource NormativeSource,DateTime EffectiveFrom,DateTime? EffectiveTo,AutomationLevel AutomationLevel,bool IsIncludedInLegalCompliance,string? Limitations,IReadOnlyList<Guid> SourceCitationIds,IReadOnlyList<LegalConditionRequest> Conditions,IReadOnlyList<LegalEvidenceRequirementRequest> EvidenceRequirements,IReadOnlyList<LegalEvidenceMappingRequest> Mappings);
+public record LegalReviewRequest(LegalReviewDecisionType Decision,LegalOutcome? ReviewedOutcome,string Reason);
+public record LegalFindingActionRequest(string Reason,string? Notes=null);

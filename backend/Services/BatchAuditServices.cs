@@ -24,7 +24,7 @@ public sealed class BatchOperationPipeline(
   ICustomsValuationEngine valuation,
   IContributionReconciliationEngine contributions,
   IRegulatoryRequirementEngine regulatory,
-  ILegalAuditEngine legal,
+  ILegalAuditEngineV2 legal,
   IOperationRiskScoringService riskScoring) : IBatchOperationPipeline {
   public async Task<BatchOperationExecutionResult> ExecuteAsync(Guid operationId, Guid userId, CancellationToken ct = default) {
     var errors = new List<string>();

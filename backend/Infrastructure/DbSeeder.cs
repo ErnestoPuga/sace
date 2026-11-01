@@ -143,6 +143,7 @@ public static class DbSeeder {
     await SeedOfficialRegulatoryCatalogAsync(db);
     await SeedRiskProfileAsync(db);
     await SeedImmexInventoryControlAsync(db);
+    await SeedFutureCustomsLawReformAsync(db);
 
     if (!configuration.GetValue<bool>("Seed:DemoData")) return;
     var admin = await db.Users.FirstOrDefaultAsync(x => x.Email == "admin@sace.local");
@@ -237,6 +238,48 @@ public static class DbSeeder {
   }
   private static async Task SeedMetadataSource(SaceDbContext db,User verifier,string code,string title,OfficialSourceType type,(string Label,DateTime Date)[] versions){
     if(await db.OfficialLegalSources.AnyAsync(x=>x.Code==code))return;const string url="https://www.sat.gob.mx/minisitio/NormatividadRMFyRGCE/";var source=new OfficialLegalSource{Code=code,Title=title,SourceType=type,Authority="Servicio de Administración Tributaria",OfficialUrl=url,Status=SourceVerificationStatus.VERIFIED};for(var i=0;i<versions.Length;i++)source.Versions.Add(new(){Version=i+1,VersionLabel=versions[i].Label,PublicationDate=versions[i].Date,EffectiveFrom=versions[i].Date,EffectiveTo=i+1<versions.Length?versions[i+1].Date.AddTicks(-1):null,OfficialUrl=url,VerificationStatus=i+1<versions.Length?SourceVerificationStatus.SUPERSEDED:SourceVerificationStatus.VERIFIED,VerifiedBy=verifier.Id,VerifiedAt=versions[i].Date,VerificationNotes="Metadatos registrados desde el portal oficial de normatividad del SAT."});db.OfficialLegalSources.Add(source);
+  }
+  private static async Task SeedFutureCustomsLawReformAsync(SaceDbContext db){
+    const string code="DOF-LA-REFORMA-2026-10-23";
+    const string url="https://dof.gob.mx/nota_detalle.php?codigo=5802077&fecha=23/10/2026";
+    var verifier=await db.Users.FirstAsync(x=>x.Email=="governance@sace.system");
+    var source=await db.OfficialLegalSources.Include(x=>x.Versions).ThenInclude(x=>x.Citations).SingleOrDefaultAsync(x=>x.Code==code);
+    if(source is null){
+      source=new OfficialLegalSource{Code=code,SourceType=OfficialSourceType.DOF_PUBLICATION};
+      db.OfficialLegalSources.Add(source);
+    }
+    var version=source.Versions.SingleOrDefault(x=>x.Version==1);
+    if(version is null){version=new OfficialLegalSourceVersion{Version=1};source.Versions.Add(version);}
+    var wasVerified=source.Status==SourceVerificationStatus.VERIFIED&&version.VerificationStatus==SourceVerificationStatus.VERIFIED;
+    source.Title="Decreto por el que se reforman y adicionan diversas disposiciones de la Ley Aduanera";
+    source.Authority="Diario Oficial de la Federación";
+    source.OfficialUrl=url;
+    source.Status=SourceVerificationStatus.VERIFIED;
+    source.UpdatedAt=DateTime.UtcNow;
+    version.VersionLabel="Publicación DOF 23/10/2026 — vigencia 01/01/2027";
+    version.DofPublicationCode="5802077";
+    version.PublicationDate=Utc(2026,10,23);
+    version.EffectiveFrom=Utc(2027,1,1);
+    version.EffectiveTo=null;
+    version.OfficialUrl=url;
+    version.VerificationStatus=SourceVerificationStatus.VERIFIED;
+    version.VerifiedBy=verifier.Id;
+    version.VerifiedAt=Utc(2026,10,23);
+    version.VerificationNotes="Fuente y alcance cotejados contra DOF/SIDOF, nota 5802077. El Segundo Transitorio condiciona la aplicación del artículo 151, fracción VII, a disposiciones posteriores de las autoridades aduaneras; las reglas dependientes permanecen DRAFT o REVIEW_REQUIRED hasta verificar esas disposiciones.";
+    UpsertCitation(OfficialCitationType.FRACTION,"Ley Aduanera, artículo 151, primer párrafo, fracción VII","151","primer párrafo","fracción VII");
+    UpsertCitation(OfficialCitationType.SUBSECTION,"Ley Aduanera, artículo 153, segundo párrafo","153","segundo párrafo",null);
+    UpsertCitation(OfficialCitationType.SUBSECTION,"Ley Aduanera, artículo 154, segundo párrafo","154","segundo párrafo",null);
+    UpsertCitation(OfficialCitationType.FRACTION,"Ley Aduanera, artículo 177, fracción XII","177",null,"fracción XII");
+    UpsertCitation(OfficialCitationType.SUBSECTION,"Ley Aduanera, artículo 144, fracción XII, segundo párrafo","144","segundo párrafo","fracción XII");
+    UpsertCitation(OfficialCitationType.SUBSECTION,"Ley Aduanera, artículo 185, fracciones I, II y III, segundo párrafo","185","segundo párrafo","fracciones I, II y III");
+    UpsertCitation(OfficialCitationType.TRANSITORY,"Segundo Transitorio — disposiciones posteriores para el artículo 151, fracción VII",null,"Segundo Transitorio","artículo 151, fracción VII");
+    if(!wasVerified)db.SystemAuditLogs.Add(new(){UserId=verifier.Id,Action="OFFICIAL_SOURCE_VERIFIED",EntityType=nameof(OfficialLegalSourceVersion),EntityId=version.Id.ToString(),Details="DOF/SIDOF nota 5802077 verificada; publicación 2026-10-23, vigencia 2027-01-01. Las reglas dependientes de disposiciones complementarias permanecen DRAFT/REVIEW_REQUIRED."});
+    await db.SaveChangesAsync();
+    void UpsertCitation(OfficialCitationType type,string label,string? article,string? section,string? subsection){
+      var citation=version.Citations.SingleOrDefault(x=>x.CitationLabel==label);
+      if(citation is null){citation=new OfficialSourceCitation{CitationLabel=label};version.Citations.Add(citation);}
+      citation.CitationType=type;citation.Article=article;citation.Section=section;citation.Subsection=subsection;citation.ExactReferenceText=label;citation.OfficialUrl=url;
+    }
   }
   private static DateTime Utc(int year,int month,int day)=>new(year,month,day,0,0,0,DateTimeKind.Utc);
 }
