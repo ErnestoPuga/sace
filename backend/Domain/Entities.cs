@@ -106,6 +106,7 @@ public class OperationDocument {
   public DateTime UploadedAt { get; set; } = DateTime.UtcNow; public Guid UploadedBy { get; set; }
   public string? DocumentNumber { get; set; } public DateTime? DocumentDate { get; set; } public string? SourceSystem { get; set; }
   public string? Notes { get; set; } public string? FileHash { get; set; } public string? ExtractedMetadataJson { get; set; }
+  public string? TextExtractionStatus { get; set; } public DateTime? TextExtractedAt { get; set; }
   public List<DocumentReference> References { get; set; } = []; public List<DocumentField> Fields { get; set; } = [];
 }
 public class DocumentReference {

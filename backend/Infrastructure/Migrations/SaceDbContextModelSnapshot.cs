@@ -2496,6 +2496,13 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("TextExtractedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TextExtractionStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("TradeOperationId")
                         .HasColumnType("TEXT");
 

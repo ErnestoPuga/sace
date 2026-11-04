@@ -25,7 +25,7 @@ public class SaceDbContext(DbContextOptions<SaceDbContext> options) : DbContext(
   protected override void OnModelCreating(ModelBuilder b) {
     b.Entity<User>().HasIndex(x => x.Email).IsUnique(); b.Entity<TradeOperation>().HasIndex(x => x.Folio).IsUnique(); b.Entity<DocumentType>().HasIndex(x => x.Code).IsUnique(); b.Entity<NormativeRule>().HasIndex(x => new { x.Code, x.Version }).IsUnique();
     b.Entity<LegalRuleCondition>().HasIndex(x=>new{x.NormativeRuleId,x.GroupCode,x.Sequence}); b.Entity<LegalEvidenceRequirement>().HasIndex(x=>new{x.NormativeRuleId,x.Code}).IsUnique(); b.Entity<LegalEvidenceMapping>().HasIndex(x=>new{x.NormativeRuleId,x.SourceType,x.SourceOutcome}); b.Entity<LegalRuleSourceCitation>().HasIndex(x=>new{x.NormativeRuleId,x.OfficialSourceCitationId}).IsUnique(); b.Entity<LegalEvaluationEvidence>().HasIndex(x=>x.AuditResultId); b.Entity<LegalEvaluationEvidence>().HasIndex(x=>new{x.SourceEntityType,x.SourceEntityId}); b.Entity<LegalReviewDecision>().HasIndex(x=>new{x.AuditResultId,x.ReviewedAt});
-    b.Entity<OperationDocument>().HasIndex(x => new { x.TradeOperationId, x.FileHash });
+    b.Entity<OperationDocument>().HasIndex(x => new { x.TradeOperationId, x.FileHash }); b.Entity<OperationDocument>().Property(x=>x.TextExtractionStatus).HasMaxLength(32);
     b.Entity<DocumentReference>().HasIndex(x => new { x.ReferenceType, x.Value });
     b.Entity<DocumentField>().HasIndex(x => new { x.OperationDocumentId, x.FieldCode }); b.Entity<DocumentField>().HasIndex(x => new { x.OperationDocumentId, x.FieldCode, x.Sequence });
     b.Entity<CrossValidationRule>().HasIndex(x => new { x.Code, x.Version }).IsUnique();
