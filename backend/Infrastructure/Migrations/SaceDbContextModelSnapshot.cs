@@ -951,6 +951,434 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("DocumentFields");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.DocumentLineItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("CountryOfOrigin")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExtractionMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("GrossWeight")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NetWeight")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nico")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OperationDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PartNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawLocator")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Sku")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffFraction")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("TotalValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("UnitValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationDocumentId", "PartNumber");
+
+                    b.HasIndex("OperationDocumentId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("DocumentLineItems");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentLineItemMatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftItemSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LeftLineItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MatchKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MatchMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReconciliationResultId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RightItemSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("RightLineItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeftLineItemId");
+
+                    b.HasIndex("ReconciliationResultId");
+
+                    b.HasIndex("RightLineItemId");
+
+                    b.ToTable("DocumentLineItemMatches");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationFieldResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CrossValidationResultId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceSource")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftExtractionMethod")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LeftLineItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftNormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftRawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NumericDifference")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("PercentDifference")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProfileFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReconciliationResultId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RightExtractionMethod")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RightFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("RightLineItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RightNormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RightRawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RuleCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tolerance")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CrossValidationResultId");
+
+                    b.HasIndex("LeftLineItemId");
+
+                    b.HasIndex("ProfileFieldId");
+
+                    b.HasIndex("RightLineItemId");
+
+                    b.HasIndex("ReconciliationResultId", "Section");
+
+                    b.ToTable("DocumentReconciliationFieldResults");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftDocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RightDocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code", "Version")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "EffectiveFrom", "EffectiveTo");
+
+                    b.ToTable("DocumentReconciliationProfiles");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationProfileField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ComparisonType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CrossValidationRuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LeftFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LineItemScope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RequiredForCoverage")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RightFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ToleranceType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ToleranceValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Weight")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CrossValidationRuleId");
+
+                    b.HasIndex("ProfileId", "Sequence");
+
+                    b.HasIndex("ProfileId", "LeftFieldCode", "RightFieldCode", "LineItemScope")
+                        .IsUnique();
+
+                    b.ToTable("DocumentReconciliationProfileFields");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ComparableFieldCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("CoveragePercent")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EvaluatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InsufficientEvidenceCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("LeftDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LineItemsLeft")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LineItemsMatched")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LineItemsRight")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LineItemsUnmatched")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ManualReviewCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MatchCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MismatchCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NotApplicableCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProfileCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProfileVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("RightDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TradeOperationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeftDocumentId");
+
+                    b.HasIndex("ProfileId");
+
+                    b.HasIndex("RightDocumentId");
+
+                    b.HasIndex("ProfileCode", "ProfileVersion");
+
+                    b.HasIndex("TradeOperationId", "EvaluatedAt");
+
+                    b.ToTable("DocumentReconciliationResults");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.DocumentReference", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3880,6 +4308,133 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("OperationDocument");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.DocumentLineItem", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
+                        .WithMany("LineItems")
+                        .HasForeignKey("OperationDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OperationDocument");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentLineItemMatch", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.DocumentLineItem", "LeftLineItem")
+                        .WithMany()
+                        .HasForeignKey("LeftLineItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentReconciliationResult", "ReconciliationResult")
+                        .WithMany("LineItemMatches")
+                        .HasForeignKey("ReconciliationResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.DocumentLineItem", "RightLineItem")
+                        .WithMany()
+                        .HasForeignKey("RightLineItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("LeftLineItem");
+
+                    b.Navigation("ReconciliationResult");
+
+                    b.Navigation("RightLineItem");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationFieldResult", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.CrossValidationResult", "CrossValidationResult")
+                        .WithMany()
+                        .HasForeignKey("CrossValidationResultId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentLineItem", "LeftLineItem")
+                        .WithMany()
+                        .HasForeignKey("LeftLineItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentReconciliationProfileField", "ProfileField")
+                        .WithMany()
+                        .HasForeignKey("ProfileFieldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.DocumentReconciliationResult", "ReconciliationResult")
+                        .WithMany("FieldResults")
+                        .HasForeignKey("ReconciliationResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.DocumentLineItem", "RightLineItem")
+                        .WithMany()
+                        .HasForeignKey("RightLineItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CrossValidationResult");
+
+                    b.Navigation("LeftLineItem");
+
+                    b.Navigation("ProfileField");
+
+                    b.Navigation("ReconciliationResult");
+
+                    b.Navigation("RightLineItem");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationProfileField", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.CrossValidationRule", "CrossValidationRule")
+                        .WithMany()
+                        .HasForeignKey("CrossValidationRuleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentReconciliationProfile", "Profile")
+                        .WithMany("Fields")
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CrossValidationRule");
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationResult", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "LeftDocument")
+                        .WithMany()
+                        .HasForeignKey("LeftDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.DocumentReconciliationProfile", "Profile")
+                        .WithMany("Results")
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "RightDocument")
+                        .WithMany()
+                        .HasForeignKey("RightDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sace.Api.Domain.TradeOperation", "TradeOperation")
+                        .WithMany("ReconciliationResults")
+                        .HasForeignKey("TradeOperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LeftDocument");
+
+                    b.Navigation("Profile");
+
+                    b.Navigation("RightDocument");
+
+                    b.Navigation("TradeOperation");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.DocumentReference", b =>
                 {
                     b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
@@ -4710,6 +5265,20 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Evidence");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationProfile", b =>
+                {
+                    b.Navigation("Fields");
+
+                    b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationResult", b =>
+                {
+                    b.Navigation("FieldResults");
+
+                    b.Navigation("LineItemMatches");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.Finding", b =>
                 {
                     b.Navigation("History");
@@ -4770,6 +5339,8 @@ namespace Sace.Api.Infrastructure.Migrations
             modelBuilder.Entity("Sace.Api.Domain.OperationDocument", b =>
                 {
                     b.Navigation("Fields");
+
+                    b.Navigation("LineItems");
 
                     b.Navigation("References");
                 });
@@ -4832,6 +5403,8 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("ImmexInventoryEntries");
 
                     b.Navigation("ImmexInventoryExits");
+
+                    b.Navigation("ReconciliationResults");
 
                     b.Navigation("RegulatoryEvaluations");
 

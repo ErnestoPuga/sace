@@ -18,7 +18,7 @@ public sealed class SaceFactory : WebApplicationFactory<Program> {
   private readonly SqliteConnection connection = new("DataSource=:memory:");
   private readonly string testStorage = Path.Combine(Path.GetTempPath(), $"sace-tests-{Guid.NewGuid():N}");
   protected override void ConfigureWebHost(IWebHostBuilder builder) {
-    connection.Open(); builder.UseEnvironment("Development"); builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?> { ["FileStorage:RootPath"] = testStorage })); builder.ConfigureLogging(logging => logging.ClearProviders().AddConsole()); builder.ConfigureServices(services => {
+    connection.Open(); builder.UseEnvironment("Development"); builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?> { ["FileStorage:RootPath"] = testStorage, ["Storage:RootPath"] = testStorage })); builder.ConfigureLogging(logging => logging.ClearProviders().AddConsole()); builder.ConfigureServices(services => {
       var options = services.Where(x => x.ServiceType == typeof(DbContextOptions<SaceDbContext>) || x.ServiceType == typeof(SaceDbContext)).ToList(); foreach (var item in options) services.Remove(item);
       services.AddDbContext<SaceDbContext>(o => o.UseSqlite(connection));
     });

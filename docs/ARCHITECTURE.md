@@ -91,6 +91,26 @@ LEGAL AuditResult
 
 `IPdfTextExtractor` aísla PdfPig; `IDocumentFieldExtractor` conserva el valor original y su procedencia; `IFieldNormalizationService` produce valores comparables; `ICrossValidationEngine` guarda resultados trazables. Los detalles, reglas y limitaciones están en [CROSS_VALIDATION_ENGINE.md](CROSS_VALIDATION_ENGINE.md).
 
+## Reconciliación documental integral
+
+```text
+OperationDocument
+   ↓
+DocumentField + DocumentLineItem
+   ↓
+CrossValidationRule → CrossValidationResult (unidad atómica)
+   ↓
+DocumentReconciliationProfile
+   ↓
+DocumentReconciliationResult + field detail + line-item matches
+   ↓
+Evidencia técnica reproducible
+   ↓
+LEGAL V2 únicamente cuando una regla jurídica explícita consume esa evidencia
+```
+
+`IDocumentReconciliationService` resuelve parejas por referencias exactas, reutiliza resultados CROSS, compara campos faltantes con la misma semántica conservadora, vincula partidas mediante `IDocumentLineItemMatcher`, calcula cobertura y persiste snapshots. Risk usa los resultados atómicos, no el summary, para evitar doble conteo. Véase [DOCUMENT_RECONCILIATION_ENGINE.md](DOCUMENT_RECONCILIATION_ENGINE.md).
+
 > Las reglas DEMO no constituyen una interpretación jurídica ni validación oficial de cumplimiento aduanero.
 
 ## Valoración aduanera y contribuciones

@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, BookOpen, ChevronRight, ClipboardCheck, FileCl
 
 const menu = [
   { to:'/', label:'Dashboard', icon:LayoutDashboard }, { to:'/operations', label:'Operaciones', icon:FolderOpen },
+  { to:'/reconciliations', label:'Reconciliación documental', icon:ListChecks },
   { label:'Auditorías', icon:ClipboardCheck, children:[{to:'/audits/daily',label:'Auditoría diaria'},{to:'/audits/monthly',label:'Auditoría mensual'},{to:'/batch-audits',label:'Auditoría por lotes'}] },
   { to:'/risk', label:'Centro de riesgo', icon:Gauge }, { to:'/review-queue', label:'Cola de revisión', icon:ListChecks },
   { label:'Control IMMEX', icon:Warehouse, children:[{to:'/immex',label:'Dashboard IMMEX'},{to:'/immex/inventory',label:'Inventario y PEPS'},{to:'/immex/fixed-assets',label:'Activo fijo'},{to:'/immex/catalogs',label:'Programas y catálogos'},{to:'/immex/conversions-rules',label:'Conversiones y reglas'},{to:'/immex/material-usage',label:'Consumos de materiales'},{to:'/immex/issues',label:'Issues de inventario'},{to:'/immex/reports',label:'Reportes'}] },
