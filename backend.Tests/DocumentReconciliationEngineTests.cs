@@ -86,13 +86,12 @@ public class DocumentReconciliationEngineTests {
         await migrator.MigrateAsync(previous);
         Assert.False(await Table(db,"DocumentReconciliationProfiles"));
 
-        var user=new User{Name="Migration user",Email=$"migration-{Guid.NewGuid():N}@example.invalid",PasswordHash="synthetic"};
-        var operation=new TradeOperation{Folio="KEEP-RECON",PedimentoNumber="26-KEEP",Period="2026-11",OperationDate=new(2026,11,8),PedimentoKey="A1",TariffFraction="40169304",OriginCountry="US",DestinationCountry="MX",CustomsRegime="Definitivo"};
-        var type=new DocumentType{Code="KEEP_RECON_DOC",Name="Keep",Description="Synthetic migration fixture"};
-        var document=new OperationDocument{TradeOperation=operation,DocumentType=type,OriginalFileName="keep.pdf",StoredFileName="keep.pdf",MimeType="application/pdf",Extension=".pdf",FilePath="synthetic/keep.pdf",UploadedBy=user.Id};
-        document.Fields.Add(new(){FieldCode=DocumentFieldCodes.InvoiceNumber,RawValue="INV-KEEP",NormalizedValue="INV-KEEP",ExtractionMethod=ExtractionMethod.PDF_TEXT,DataType=DocumentFieldDataType.IDENTIFIER});
-        db.AddRange(user,document);
-        await db.SaveChangesAsync();
+        var userId=Guid.NewGuid();var operationId=Guid.NewGuid();var documentTypeId=Guid.NewGuid();var documentId=Guid.NewGuid();var fieldId=Guid.NewGuid();var now=new DateTime(2026,11,8,0,0,0,DateTimeKind.Utc);
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Users (Id,Name,Email,PasswordHash,Role,IsActive,CreatedAt) VALUES ({userId},{"Migration user"},{$"migration-{Guid.NewGuid():N}@example.invalid"},{"synthetic"},{"Administrator"},{true},{now})");
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO TradeOperations (Id,Folio,PedimentoNumber,OperationType,Period,OperationDate,PedimentoKey,TariffFraction,OriginCountry,DestinationCountry,CustomsRegime,IsImmex,PreferentialTreatment,Status,CreatedAt,UpdatedAt) VALUES ({operationId},{"KEEP-RECON"},{"26-KEEP"},{"Importacion"},{"2026-11"},{now},{"A1"},{"40169304"},{"US"},{"MX"},{"Definitivo"},{false},{false},{"PendingAudit"},{now},{now})");
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO DocumentTypes (Id,Code,Name,Description,CorrectionResponsible,IsActive) VALUES ({documentTypeId},{"KEEP_RECON_DOC"},{"Keep"},{"Synthetic migration fixture"},{"Operations"},{true})");
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO OperationDocuments (Id,TradeOperationId,DocumentTypeId,OriginalFileName,StoredFileName,MimeType,Extension,FileSize,FilePath,Version,ValidationStatus,UploadedAt,UploadedBy) VALUES ({documentId},{operationId},{documentTypeId},{"keep.pdf"},{"keep.pdf"},{"application/pdf"},{".pdf"},{1L},{"synthetic/keep.pdf"},{1},{"Valid"},{now},{userId})");
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO DocumentFields (Id,OperationDocumentId,FieldCode,RawValue,NormalizedValue,DataType,Unit,Currency,Confidence,ExtractionMethod,SourceLocator,GroupKey,Sequence,IsManuallyConfirmed,CreatedAt,UpdatedAt) VALUES ({fieldId},{documentId},{DocumentFieldCodes.InvoiceNumber},{"INV-KEEP"},{"INV-KEEP"},{"IDENTIFIER"},{(string?)null},{(string?)null},{(double?)null},{"PDF_TEXT"},{(string?)null},{(string?)null},{(int?)null},{false},{now},{now})");
 
         await migrator.MigrateAsync();
         Assert.True(await Table(db,"DocumentReconciliationProfiles"));

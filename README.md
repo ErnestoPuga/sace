@@ -2,6 +2,8 @@
 
 SACE incluye reconciliación documental integral: compara los campos estructurados y partidas soportadas entre parejas documentales configuradas (Factura ↔ COVE, Factura ↔ Pedimento, Packing List ↔ Pedimento y Packing List ↔ Transporte). Conserva reglas CROSS atómicas, trazabilidad, cobertura e historial; una diferencia técnica no equivale a incumplimiento legal.
 
+La **Document Intelligence Layer V1** incorpora lectura por página/región, OCR local opcional, clasificación semántica, esquema canónico, roles, partidas, cálculos reproducibles, perfiles gobernados y corrección con historial. No modifica LEGAL ni decide por sí sola una reconciliación. Véase [docs/DOCUMENT_INTELLIGENCE_LAYER.md](docs/DOCUMENT_INTELLIGENCE_LAYER.md).
+
 La guía para publicar el piloto en Render y Vercel está en [docs/DEPLOYMENT_PILOT.md](docs/DEPLOYMENT_PILOT.md).
 
 **Sistema Auditor de Comercio Exterior** es un MVP de extremo a extremo para registrar expedientes, administrar documentos, evaluar controles normativos acotados, generar hallazgos, corregir documentos y conservar trazabilidad.
@@ -33,6 +35,7 @@ Sprint 7 incorpora **LEGAL V2**: aplicabilidad por fecha de operación, evidenci
 - Frontend: React, TypeScript, Vite, React Router, TailwindCSS, Axios, Recharts y Lucide.
 - Reglas DEMO/técnicas encapsuladas en `IAuditEngine`, motor normativo en `ILegalAuditEngine` y consolidación mensual en `IMonthlyAuditRule`.
 - Extracción de `DocumentField`, normalización y reglas versionadas de cruces encapsuladas en `IDocumentFieldExtractor`, `IFieldNormalizationService` e `ICrossValidationEngine`.
+- Inteligencia documental encapsulada en `IDocumentIntelligencePipeline`, `IPdfLayoutExtractor`, `IOcrTextExtractor`, `IDocumentSemanticClassifier`, `ISemanticFieldResolver` e `ICalculatedFieldService`, con OCR local deshabilitado por omisión.
 - Valoración, conversión trazable y conciliación encapsuladas en `ICustomsValuationEngine`, `IMonetaryConversionService` e `IContributionReconciliationEngine`.
 - Requisitos regulatorios, vigencias y evidencia RRNA encapsulados en `IRegulatoryRequirementEngine`, sin acoplarlos a `ILegalAuditEngine`.
 - Gobierno e importación normativa encapsulados en `IRegulatoryCatalogImportService` e `IRegulatoryCatalogDiffService`, con SHA-256, Dry Run y fuentes oficiales verificadas.

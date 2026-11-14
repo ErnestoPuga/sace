@@ -58,6 +58,58 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("Annex24CoverageItems");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.ApprovedFieldMapping", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ApprovedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ApprovedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CanonicalFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContextFingerprint")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Evidence")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLabel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProviderProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Section")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderProfileId", "OriginalLabel", "ContextFingerprint", "CanonicalFieldCode")
+                        .IsUnique();
+
+                    b.ToTable("ApprovedFieldMappings");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.Audit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -344,6 +396,56 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("BatchAuditOperations");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.CanonicalFieldDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AllowedDocumentTypesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CanonicalUnitType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRepeatable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("CanonicalFieldDefinitions");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
@@ -894,8 +996,21 @@ namespace Sace.Api.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("AnalysisVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CanonicalFieldCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ColumnIndex")
+                        .HasColumnType("INTEGER");
+
                     b.Property<double?>("Confidence")
                         .HasColumnType("REAL");
+
+                    b.Property<string>("ConfidenceLevel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -915,6 +1030,9 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Formula")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("GroupKey")
                         .HasColumnType("TEXT");
 
@@ -927,14 +1045,55 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<Guid>("OperationDocumentId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("OriginalLabel")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLanguage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PageNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ProviderProfileId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("RawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RecognitionMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RecognitionReason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RegionJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RequiresReview")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RowIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Section")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("Sequence")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("SourceKind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SourceLocator")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("TableIndex")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Unit")
                         .HasColumnType("TEXT");
@@ -944,11 +1103,146 @@ namespace Sace.Api.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProviderProfileId");
+
                     b.HasIndex("OperationDocumentId", "FieldCode");
+
+                    b.HasIndex("OperationDocumentId", "CanonicalFieldCode", "AnalysisVersion");
 
                     b.HasIndex("OperationDocumentId", "FieldCode", "Sequence");
 
                     b.ToTable("DocumentFields");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentFieldCorrection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CorrectedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CorrectedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrectedCanonicalFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrectedNormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrectedRawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrectedUnit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DocumentFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Evidence")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalCanonicalFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalNormalizedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalRawValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentFieldId", "CorrectedAt");
+
+                    b.ToTable("DocumentFieldCorrections");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentIntelligenceAnalysis", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClassificationConfidence")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClassificationEvidenceJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DetectedDocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DetectedLanguage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FieldCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LayoutFingerprint")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LineItemCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NativeTextLength")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OcrPagesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("OcrUsed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("OperationDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReadingMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationDocumentId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("DocumentIntelligenceAnalyses");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.DocumentLineItem", b =>
@@ -957,8 +1251,16 @@ namespace Sace.Api.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("Cartons")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
                     b.Property<double?>("Confidence")
                         .HasColumnType("REAL");
+
+                    b.Property<string>("ConfidenceLevel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CountryOfOrigin")
                         .HasColumnType("TEXT");
@@ -972,6 +1274,9 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DimensionUnit")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ExtractionMethod")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -980,7 +1285,21 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasPrecision(18, 6)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("Height")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ItemNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Length")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LotNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Model")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("NetWeight")
@@ -993,7 +1312,21 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<Guid>("OperationDocumentId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("PageNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Pallets")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PartNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("PiecesPerCarton")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PoNumber")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("Quantity")
@@ -1003,10 +1336,30 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<string>("RawLocator")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("RecognitionMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RegionJson")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Sequence")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("SerialNumber")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Sku")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SoNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceKind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Submodel")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TariffFraction")
@@ -1020,6 +1373,14 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("UnitValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("VolumeCbm")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Width")
                         .HasPrecision(18, 6)
                         .HasColumnType("TEXT");
 
@@ -1078,6 +1439,77 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("RightLineItemId");
 
                     b.ToTable("DocumentLineItemMatches");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AnalysisVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("City")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConfidenceLevel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExteriorNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OperationDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PageNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PostalCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RegionJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceKind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceLocator")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationDocumentId", "Role", "AnalysisVersion");
+
+                    b.ToTable("DocumentParticipants");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationFieldResult", b =>
@@ -1411,6 +1843,50 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("DocumentReferences");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.DocumentRelationshipCandidate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConfidenceLevel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvidenceJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RelationshipType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReviewStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SourceDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TargetDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetDocumentId");
+
+                    b.HasIndex("SourceDocumentId", "TargetDocumentId", "RelationshipType");
+
+                    b.ToTable("DocumentRelationshipCandidates");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.DocumentType", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1442,6 +1918,52 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("DocumentTypes");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.FieldAlias", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CanonicalFieldCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CanonicalFieldDefinitionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentTypeCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CanonicalFieldDefinitionId");
+
+                    b.HasIndex("CanonicalFieldCode", "Alias", "Language", "DocumentTypeCode", "ProviderKey")
+                        .IsUnique();
+
+                    b.ToTable("FieldAliases");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.Finding", b =>
@@ -2880,6 +3402,15 @@ namespace Sace.Api.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ClassificationConfidenceLevel")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClassificationEvidenceJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DetectedLanguage")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("DocumentDate")
                         .HasColumnType("TEXT");
 
@@ -2906,12 +3437,27 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<long>("FileSize")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("IntelligenceStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IntelligenceVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastAnalyzedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LayoutFingerprint")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("MimeType")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("OcrUsed")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
@@ -2952,6 +3498,8 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.HasIndex("DocumentTypeId");
 
                     b.HasIndex("TradeOperationId", "FileHash");
+
+                    b.HasIndex("TradeOperationId", "IntelligenceStatus");
 
                     b.ToTable("OperationDocuments");
                 });
@@ -3087,6 +3635,48 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("OperationRiskScores");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ProviderDocumentProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentTypeCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LayoutFingerprint")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderKey", "DocumentTypeCode", "Version")
+                        .IsUnique();
+
+                    b.ToTable("ProviderDocumentProfiles");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryCatalogImport", b =>
@@ -3958,6 +4548,48 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.ToTable("TradeOperations");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.UnitAlias", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CanonicalUnit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConversionBaseUnit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ConversionFactor")
+                        .HasPrecision(18, 9)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RequiresVerifiedFactor")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alias", "Language")
+                        .IsUnique();
+
+                    b.ToTable("UnitAliases");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4038,6 +4670,17 @@ namespace Sace.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("OfficialSourceCitation");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ApprovedFieldMapping", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.ProviderDocumentProfile", "ProviderProfile")
+                        .WithMany("Mappings")
+                        .HasForeignKey("ProviderProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProviderProfile");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.Audit", b =>
@@ -4305,6 +4948,35 @@ namespace Sace.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Sace.Api.Domain.ProviderDocumentProfile", "ProviderProfile")
+                        .WithMany()
+                        .HasForeignKey("ProviderProfileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("OperationDocument");
+
+                    b.Navigation("ProviderProfile");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentFieldCorrection", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.DocumentField", "DocumentField")
+                        .WithMany("Corrections")
+                        .HasForeignKey("DocumentFieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocumentField");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentIntelligenceAnalysis", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
+                        .WithMany("IntelligenceAnalyses")
+                        .HasForeignKey("OperationDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("OperationDocument");
                 });
 
@@ -4342,6 +5014,17 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("ReconciliationResult");
 
                     b.Navigation("RightLineItem");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentParticipant", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "OperationDocument")
+                        .WithMany("Participants")
+                        .HasForeignKey("OperationDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OperationDocument");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationFieldResult", b =>
@@ -4444,6 +5127,36 @@ namespace Sace.Api.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("OperationDocument");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentRelationshipCandidate", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "SourceDocument")
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sace.Api.Domain.OperationDocument", "TargetDocument")
+                        .WithMany()
+                        .HasForeignKey("TargetDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SourceDocument");
+
+                    b.Navigation("TargetDocument");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.FieldAlias", b =>
+                {
+                    b.HasOne("Sace.Api.Domain.CanonicalFieldDefinition", "CanonicalFieldDefinition")
+                        .WithMany("Aliases")
+                        .HasForeignKey("CanonicalFieldDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CanonicalFieldDefinition");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.Finding", b =>
@@ -5245,6 +5958,11 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Navigation("Operations");
                 });
 
+            modelBuilder.Entity("Sace.Api.Domain.CanonicalFieldDefinition", b =>
+                {
+                    b.Navigation("Aliases");
+                });
+
             modelBuilder.Entity("Sace.Api.Domain.ContributionCalculation", b =>
                 {
                     b.Navigation("Lines");
@@ -5263,6 +5981,11 @@ namespace Sace.Api.Infrastructure.Migrations
             modelBuilder.Entity("Sace.Api.Domain.CustomsValuationComponent", b =>
                 {
                     b.Navigation("Evidence");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.DocumentField", b =>
+                {
+                    b.Navigation("Corrections");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.DocumentReconciliationProfile", b =>
@@ -5340,7 +6063,11 @@ namespace Sace.Api.Infrastructure.Migrations
                 {
                     b.Navigation("Fields");
 
+                    b.Navigation("IntelligenceAnalyses");
+
                     b.Navigation("LineItems");
+
+                    b.Navigation("Participants");
 
                     b.Navigation("References");
                 });
@@ -5348,6 +6075,11 @@ namespace Sace.Api.Infrastructure.Migrations
             modelBuilder.Entity("Sace.Api.Domain.OperationRiskScore", b =>
                 {
                     b.Navigation("Factors");
+                });
+
+            modelBuilder.Entity("Sace.Api.Domain.ProviderDocumentProfile", b =>
+                {
+                    b.Navigation("Mappings");
                 });
 
             modelBuilder.Entity("Sace.Api.Domain.RegulatoryRequirement", b =>

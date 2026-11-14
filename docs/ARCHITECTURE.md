@@ -35,6 +35,24 @@ El módulo documental conserva esa separación:
 - `DocumentReference` asocia técnicamente documentos mediante COVE, e-Document, UUID CFDI, DODA u otros identificadores.
 - SHA-256 identifica contenido repetido dentro de la misma operación; no participa en autenticación.
 
+## Document Intelligence Layer V1
+
+La capa de inteligencia documental se ubica entre la carga y los motores consumidores:
+
+```text
+OperationDocument
+  → layout nativo / OCR local opcional
+  → clasificación e idioma
+  → resolución semántica canónica
+  → DocumentField + DocumentLineItem + DocumentParticipant
+  → snapshot versionado / corrección humana
+  → CROSS, reconciliación u otros consumidores explícitos
+```
+
+`IDocumentIntelligencePipeline` orquesta adaptadores reemplazables para layout, OCR, clasificación, campos, partidas y cálculos. `CanonicalFieldDefinition`, `FieldAlias` y `UnitAlias` forman el catálogo común. Los mappings por proveedor sólo son pistas aprobadas y exigen coincidencia exacta del fingerprint del layout. Cada análisis persiste un snapshot y cada corrección conserva antes/después, usuario, fecha y motivo.
+
+OCR no es un servicio cloud: el adaptador ejecuta exclusivamente un binario o wrapper local cuando el feature flag está activo. Ausencia o error produce estados técnicos controlados, nunca `Finding` ni `NON_COMPLIANT`. Detalle en [DOCUMENT_INTELLIGENCE_LAYER.md](DOCUMENT_INTELLIGENCE_LAYER.md).
+
 ## Control IMMEX / Anexo 24 V1
 
 Sprint 6 agrega un módulo operativo independiente del motor LEGAL:
