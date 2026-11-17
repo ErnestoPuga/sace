@@ -1251,6 +1251,9 @@ namespace Sace.Api.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Brand")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal?>("Cartons")
                         .HasPrecision(18, 6)
                         .HasColumnType("TEXT");
@@ -1521,11 +1524,22 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<Guid?>("CrossValidationResultId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DeferredValidationTarget")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("EvidenceSource")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FunctionalOutcome")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -1537,6 +1551,9 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("LeftLineItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftLocation")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LeftNormalizedValue")
@@ -1560,6 +1577,9 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<Guid>("ProfileFieldId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ReasonCode")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ReconciliationResultId")
                         .HasColumnType("TEXT");
 
@@ -1571,6 +1591,9 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("RightLineItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RightLocation")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RightNormalizedValue")
@@ -1587,6 +1610,10 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Tolerance")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Treatment")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1671,6 +1698,19 @@ namespace Sace.Api.Infrastructure.Migrations
                     b.Property<Guid?>("CrossValidationRuleId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DeferredValidationTarget")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ExpectedInLeft")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ExpectedInRight")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
@@ -1706,6 +1746,10 @@ namespace Sace.Api.Infrastructure.Migrations
                         .HasPrecision(18, 6)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Treatment")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal?>("Weight")
                         .HasPrecision(18, 6)
                         .HasColumnType("TEXT");
@@ -1726,6 +1770,10 @@ namespace Sace.Api.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CalculationJson")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("ComparableFieldCount")
@@ -1774,6 +1822,18 @@ namespace Sace.Api.Infrastructure.Migrations
 
                     b.Property<string>("Outcome")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PairingExplanation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PairingMethod")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PairingReasonCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PairingStatus")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProfileCode")
